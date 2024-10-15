@@ -8,8 +8,7 @@ This version of the website is built using Flask and React, orchestrated with Do
 * Install Node.js
 * Install Yarn
 * Install Docker
-* Install AWS Elastic Beanstalk CLI (leads only)
-* Download [config.py](https://drive.google.com/file/d/1atqjb_noiwaAkVuwiD_U1aUueucnpDZN/view?usp=sharing) and place the file in the api folder
+* Download config.py (ask team member for it) and place the file in the api folder
 
 ## Development
 1. Ensure your local files are synced with any updates on GitHub.
