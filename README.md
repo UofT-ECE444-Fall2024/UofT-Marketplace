@@ -6,18 +6,29 @@ This version of the website is built using Flask and React, orchestrated with Do
 ## Setup
 * Install Python3.9
 * Install Node.js
-* Install Yarn
 * Install Docker
-* Download config.py (ask team member for it) and place the file in the api folder
+
 
 ## Development
+
+### Locally with `venv`
+(In the root directory)
+1. Run `make create-venv` to create a virtual environment inside of the `/backend` folder
+2. Run `make install` to install the dependencies for the backend and frontend
+3. Run `make start` to spin up the application
+
+Navigate to http://localhost:3000/ to see the application
+
+### With Docker 
 1. Ensure your local files are synced with any updates on GitHub.
-2. Run the following commands in the main directory (make sure Docker is running!):
+2. Run the following command in the main directory (make sure Docker is running!):
 ```
-docker-compose -f docker-compose.dev.yml build
-docker-compose -f docker-compose.dev.yml up
+make docker-up
 ```
-and navigate to http://localhost:3000/ to view your local version of the website!
+
+Navigate to http://localhost:3000/ to see the application.
+
+To stop the application, run `make docker-down`
 
 
 * The `build` command should be ran after any packages are installed, so to be safe, run it every time you pull from GitHub (and whenever you install new packages).
