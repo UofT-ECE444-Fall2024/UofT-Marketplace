@@ -3,7 +3,7 @@ import Navbar from "./components/Navbar"
 import { Route, Routes } from 'react-router-dom';
 import Landing from './pages/Landing';
 import Chat from './pages/Chat';
-import Auth from './components/Auth';
+import Auth from './pages/Auth';
 
 const WithNavbar = ({ children }) => (
   <>
