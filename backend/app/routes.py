@@ -2,34 +2,18 @@ from flask import Blueprint, jsonify, current_app, request
 
 bp = Blueprint('main', __name__)
 
-@bp.route('/api/auth/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    
-    if username in current_app.config['USERS'] and current_app.config['USERS'][username] == password:
-        return jsonify({
-            'status': 'success',
-            'message': 'Login successful',
-            'user': {'username': username}
-        }), 200
-    else:
-        return jsonify({
-            'status': 'error',
-            'message': 'Invalid username or password'
-        }), 401
-
 @bp.route('/api/auth/register', methods=['POST'])
 def register():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-    
-    if not username or not password:
+    full_name = data.get('full_name')
+    email = data.get('email')
+
+    if not all([username, password, full_name, email]):
         return jsonify({
             'status': 'error',
-            'message': 'Username and password are required'
+            'message': 'All fields are required'
         }), 400
         
     if username in current_app.config['USERS']:
@@ -38,12 +22,48 @@ def register():
             'message': 'Username already exists'
         }), 409
         
-    current_app.config['USERS'][username] = password
+    current_app.config['USERS'][username] = {
+        'password': password,
+        'full_name': full_name,
+        'email': email,
+        'verified': False
+    }
+    
+    # Create response without sensitive information
+    user_data = {
+        'username': username,
+        'full_name': full_name,
+        'verified': False
+    }
+    
     return jsonify({
         'status': 'success',
         'message': 'Registration successful',
-        'user': {'username': username}
+        'user': user_data
     }), 201
+
+@bp.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    if username in current_app.config['USERS'] and current_app.config['USERS'][username]['password'] == password:
+        user_data = {
+            'username': username,
+            'full_name': current_app.config['USERS'][username]['full_name'],
+            'verified': current_app.config['USERS'][username]['verified']
+        }
+        return jsonify({
+            'status': 'success',
+            'message': 'Login successful',
+            'user': user_data
+        }), 200
+    else:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid username or password'
+        }), 401
     
 @bp.route('/')
 def home():

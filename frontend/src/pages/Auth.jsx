@@ -15,7 +15,12 @@ import {
 const Auth = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(0);
-  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    full_name: '',
+    email: ''
+  });
   const [status, setStatus] = useState({ error: '', success: '' });
 
   const handleChange = (e) => {
@@ -33,11 +38,16 @@ const Auth = () => {
     const isLogin = activeTab === 0;
     const endpoint = isLogin ? 'login' : 'register';
 
+    // Only send relevant fields for login
+    const submitData = isLogin 
+      ? { username: formData.username, password: formData.password }
+      : formData;
+
     try {
       const response = await fetch(`http://localhost:5001/api/auth/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       });
 
       const data = await response.json();
@@ -69,19 +79,52 @@ const Auth = () => {
           {status.error && <Alert severity="error" className="w-full">{status.error}</Alert>}
 
           <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
-            {['username', 'password'].map((field) => (
-              <TextField
-                key={field}
-                name={field}
-                label={field.charAt(0).toUpperCase() + field.slice(1)}
-                type={field === 'password' ? 'password' : 'text'}
-                variant="outlined"
-                fullWidth
-                value={formData[field]}
-                onChange={handleChange}
-                required
-              />
-            ))}
+            <TextField
+              name="username"
+              label="Username"
+              variant="outlined"
+              fullWidth
+              value={formData.username}
+              onChange={handleChange}
+              required
+            />
+            
+            <TextField
+              name="password"
+              label="Password"
+              type="password"
+              variant="outlined"
+              fullWidth
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+
+            {activeTab === 1 && (
+              <>
+                <TextField
+                  name="full_name"
+                  label="Full Name"
+                  variant="outlined"
+                  fullWidth
+                  value={formData.full_name}
+                  onChange={handleChange}
+                  required
+                />
+                
+                <TextField
+                  name="email"
+                  label="Email"
+                  type="email"
+                  variant="outlined"
+                  fullWidth
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                />
+              </>
+            )}
+
             <Button 
               type="submit" 
               variant="contained" 

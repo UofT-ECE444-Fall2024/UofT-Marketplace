@@ -6,9 +6,14 @@ def create_app():
     CORS(app)
     
     app.config['SECRET_KEY'] = 'your-secret-key-here'
-    # Store users in memory (replace with database in production)
+    # Store users with extended profile information
     app.config['USERS'] = {
-        'admin': 'admin'  # default admin user
+        'admin': {
+            'password': 'admin',
+            'full_name': 'Admin User',
+            'email': 'admin@example.com',
+            'verified': True
+        }
     }
 
     with app.app_context():
