@@ -26,14 +26,16 @@ def register():
         'password': password,
         'full_name': full_name,
         'email': email,
-        'verified': False
+        'verified': False,
+        'description': ''  # Added default description
     }
     
     # Create response without sensitive information
     user_data = {
         'username': username,
         'full_name': full_name,
-        'verified': False
+        'verified': False,
+        'description': ''
     }
     
     return jsonify({
@@ -52,7 +54,8 @@ def login():
         user_data = {
             'username': username,
             'full_name': current_app.config['USERS'][username]['full_name'],
-            'verified': current_app.config['USERS'][username]['verified']
+            'verified': current_app.config['USERS'][username]['verified'],
+            'description': current_app.config['USERS'][username].get('description', '')
         }
         return jsonify({
             'status': 'success',
@@ -64,6 +67,26 @@ def login():
             'status': 'error',
             'message': 'Invalid username or password'
         }), 401
+
+@bp.route('/api/profile/<username>', methods=['GET'])
+def get_profile(username):
+    if username not in current_app.config['USERS']:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found'
+        }), 404
+        
+    user_data = {
+        'username': username,
+        'full_name': current_app.config['USERS'][username]['full_name'],
+        'verified': current_app.config['USERS'][username]['verified'],
+        'description': current_app.config['USERS'][username].get('description', '')
+    }
+    
+    return jsonify({
+        'status': 'success',
+        'user': user_data
+    }), 200
     
 @bp.route('/')
 def home():
