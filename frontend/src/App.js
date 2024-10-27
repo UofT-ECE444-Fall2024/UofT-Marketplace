@@ -1,23 +1,24 @@
-import logo from './logo.svg';
 import './App.css';
 import Navbar from "./components/Navbar"
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
-import Listing from './components/Listing';
 import { Route, Routes } from 'react-router-dom';
 import Landing from './pages/Landing';
-import Chat from './pages/Chat'
+import Chat from './pages/Chat';
+import Auth from './components/Auth';
 
+const WithNavbar = ({ children }) => (
+  <>
+    <Navbar />
+    {children}
+  </>
+);
 
 function App() {
   return (
     <div className="App">
-      <Navbar />
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/chat" element={<Chat />}/>
+        <Route path="/" element={<Auth />} />
+        <Route path="/home" element={<WithNavbar><Landing /></WithNavbar>} />
+        <Route path="/chat" element={<WithNavbar><Chat /></WithNavbar>} />
       </Routes>
     </div>
   );
