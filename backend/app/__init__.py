@@ -12,7 +12,8 @@ def create_app():
             'password': 'admin',
             'full_name': 'Admin User',
             'email': 'admin@example.com',
-            'verified': True
+            'verified': True,
+            'description': 'Admin user description' 
         }
     }
 
