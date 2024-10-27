@@ -1,17 +1,18 @@
 from flask import Flask
-from flask_cors import CORS  # You'll need to install this: pip install flask-cors
+from flask_cors import CORS
 
 def create_app():
     app = Flask(__name__)
-    # Enable CORS for development
     CORS(app)
     
-    # Add configuration
-    app.config['SECRET_KEY'] = 'your-secret-key-here'  # Change this in production
-    app.config['USERNAME'] = 'admin'
-    app.config['PASSWORD'] = 'admin'
+    app.config['SECRET_KEY'] = 'your-secret-key-here'
+    # Store users in memory (replace with database in production)
+    app.config['USERS'] = {
+        'admin': 'admin'  # default admin user
+    }
 
     with app.app_context():
         from . import routes
+        app.register_blueprint(routes.bp)
 
     return app

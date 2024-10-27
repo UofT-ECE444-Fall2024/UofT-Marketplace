@@ -1,12 +1,14 @@
-from flask import jsonify, current_app, request
+from flask import Blueprint, jsonify, current_app, request
 
-@current_app.route('/api/auth/login', methods=['POST'])
+bp = Blueprint('main', __name__)
+
+@bp.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
     
-    if username == current_app.config['USERNAME'] and password == current_app.config['PASSWORD']:
+    if username in current_app.config['USERS'] and current_app.config['USERS'][username] == password:
         return jsonify({
             'status': 'success',
             'message': 'Login successful',
@@ -18,6 +20,31 @@ def login():
             'message': 'Invalid username or password'
         }), 401
 
-@current_app.route('/')
+@bp.route('/api/auth/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    if not username or not password:
+        return jsonify({
+            'status': 'error',
+            'message': 'Username and password are required'
+        }), 400
+        
+    if username in current_app.config['USERS']:
+        return jsonify({
+            'status': 'error',
+            'message': 'Username already exists'
+        }), 409
+        
+    current_app.config['USERS'][username] = password
+    return jsonify({
+        'status': 'success',
+        'message': 'Registration successful',
+        'user': {'username': username}
+    }), 201
+    
+@bp.route('/')
 def home():
     return jsonify({"message": "Hello World!"})
