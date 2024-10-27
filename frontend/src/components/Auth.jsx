@@ -1,31 +1,37 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  TextField, 
-  Button, 
-  Alert, 
-  Container, 
-  Typography, 
-  Paper,
-  Box 
-} from '@mui/material';
+import { TextField, Button, Alert, Container, Typography, Paper, Box } from '@mui/material';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [flashMessage, setFlashMessage] = useState('');
+  const [formData, setFormData] = useState({ username: '', password: '' });
+  const [status, setStatus] = useState({ error: '', success: '' });
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (username === 'admin' && password === 'admin') {
-      setFlashMessage('Successfully logged in!');
-      setTimeout(() => {
-        navigate('/home');
-      }, 1000);
-    } else {
-      setError('Invalid username or password');
+    try {
+      const response = await fetch('http://localhost:5001/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setStatus({ error: '', success: 'Successfully logged in!' });
+        setTimeout(() => navigate('/home'), 1000);
+      } else {
+        setStatus({ error: data.message || 'Login failed', success: '' });
+      }
+    } catch {
+      setStatus({ error: 'Connection error. Please try again.', success: '' });
     }
   };
 
@@ -33,60 +39,27 @@ const Auth = () => {
     <Container maxWidth="sm" className="mt-16">
       <Paper elevation={3} className="p-8">
         <Box className="flex flex-col items-center gap-6">
-          <Typography variant="h3" className="font-bold">
-            Name of App
-          </Typography>
-
-          {flashMessage && (
-            <Alert severity="success" className="w-full">
-              {flashMessage}
-            </Alert>
-          )}
-
-          <Typography variant="h5">
-            Login
-          </Typography>
-
-          {error && (
-            <Alert severity="error" className="w-full">
-              {error}
-            </Alert>
-          )}
+          <Typography variant="h3" className="font-bold">Name of App</Typography>
+          {status.success && <Alert severity="success" className="w-full">{status.success}</Alert>}
+          <Typography variant="h5">Login</Typography>
+          {status.error && <Alert severity="error" className="w-full">{status.error}</Alert>}
 
           <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
-            <TextField
-              label="Username"
-              variant="outlined"
-              fullWidth
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-            />
-            
-            <TextField
-              label="Password"
-              type="password"
-              variant="outlined"
-              fullWidth
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-
-            <Button 
-              type="submit" 
-              variant="contained" 
-              size="large"
-              className="mt-4"
-            >
+            {['username', 'password'].map((field) => (
+              <TextField
+                key={field}
+                name={field}
+                label={field.charAt(0).toUpperCase() + field.slice(1)}
+                type={field === 'password' ? 'password' : 'text'}
+                variant="outlined"
+                fullWidth
+                value={formData[field]}
+                onChange={handleChange}
+              />
+            ))}
+            <Button type="submit" variant="contained" size="large" className="mt-4">
               Login
             </Button>
-
-            <Typography 
-              variant="body2" 
-              color="textSecondary" 
-              className="text-center mt-2"
-            >
-              Use "admin" for username and password
-            </Typography>
           </form>
         </Box>
       </Paper>
