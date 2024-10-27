@@ -30,7 +30,8 @@ const Auth = () => {
       } else {
         setStatus({ error: data.message || 'Login failed', success: '' });
       }
-    } catch {
+    } catch(error) {
+      console.error('Connection error:', error);
       setStatus({ error: 'Connection error. Please try again.', success: '' });
     }
   };
