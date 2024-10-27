@@ -20,7 +20,7 @@ backend-install: create-venv
 frontend-install:
 	cd $(FRONTEND_DIR) && npm install
 
-start: frontend-start backend-start
+start: frontend-start backend-start tailwind-watch
 
 frontend-start:
 	cd $(FRONTEND_DIR) && npm start
