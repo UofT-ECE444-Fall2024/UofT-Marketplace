@@ -53,6 +53,41 @@ const Auth = () => {
             </Alert>
           )}
 
+          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
+            <TextField
+              label="Username"
+              variant="outlined"
+              fullWidth
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+            />
+            
+            <TextField
+              label="Password"
+              type="password"
+              variant="outlined"
+              fullWidth
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+
+            <Button 
+              type="submit" 
+              variant="contained" 
+              size="large"
+              className="mt-4"
+            >
+              Login
+            </Button>
+
+            <Typography 
+              variant="body2" 
+              color="textSecondary" 
+              className="text-center mt-2"
+            >
+              Use "admin" for username and password
+            </Typography>
+          </form>
         </Box>
       </Paper>
     </Container>
