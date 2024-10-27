@@ -1,26 +1,61 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+  TextField, 
+  Button, 
+  Alert, 
+  Container, 
+  Typography, 
+  Paper,
+  Box 
+} from '@mui/material';
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [flashMessage, setFlashMessage] = useState('');
 
-  const handleAuth = () => {
-    // In a real app, you'd handle actual authentication here
-    navigate('/home');
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (username === 'admin' && password === 'admin') {
+      setFlashMessage('Successfully logged in!');
+      setTimeout(() => {
+        navigate('/home');
+      }, 1000);
+    } else {
+      setError('Invalid username or password');
+    }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-      <div className="p-8 bg-white rounded-lg shadow-md">
-        <h1 className="text-4xl font-bold mb-6">Hello</h1>
-        <button 
-          onClick={handleAuth}
-          className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          Enter
-        </button>
-      </div>
-    </div>
+    <Container maxWidth="sm" className="mt-16">
+      <Paper elevation={3} className="p-8">
+        <Box className="flex flex-col items-center gap-6">
+          <Typography variant="h3" className="font-bold">
+            Name of App
+          </Typography>
+
+          {flashMessage && (
+            <Alert severity="success" className="w-full">
+              {flashMessage}
+            </Alert>
+          )}
+
+          <Typography variant="h5">
+            Login
+          </Typography>
+
+          {error && (
+            <Alert severity="error" className="w-full">
+              {error}
+            </Alert>
+          )}
+
+        </Box>
+      </Paper>
+    </Container>
   );
 };
 
