@@ -4,7 +4,7 @@ import ListingCard from '../components/ListingCard';
 import AddListingPopup from '../components/AddListingPopup';
 
 function ListingsGrid() {
-  const [listings, setListings] = useState([]); // Start with an empty array
+  const [listings, setListings] = useState([]);
 
   const [openPopup, setOpenPopup] = useState(false);
 
@@ -23,12 +23,17 @@ function ListingsGrid() {
 
   return (
     <Box sx={{ padding: 5 }}>
-      <Button variant="contained" color="primary" onClick={handleOpenPopup} sx={{ marginBottom: 3 }}>
-        + Add Listing
-      </Button>
+      <Grid container justifyContent="flex-end" sx={{ marginBottom: 3 }}>
+        <Grid item>
+          <Button variant="contained" color="primary" onClick={handleOpenPopup}>
+            + Add Listing
+          </Button>
+        </Grid>
+      </Grid>
 
       <Grid container spacing={5} sx={{ flexGrow: 1 }}>
-        {listings.length > 0 ? ( // Check if there are listings to display
+        {/* Check if there are listings to display */}
+        {listings.length > 0 ? (
           listings.map((listing, index) => (
             <Grid item key={index} xs={12} sm={6} md={4} lg={3}>
               <ListingCard 
