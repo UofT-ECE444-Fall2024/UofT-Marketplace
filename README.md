@@ -3,6 +3,17 @@ This version of the website is built using Flask and React, orchestrated with Do
 
 **Sprint Board:** https://app.zenhub.com/workspaces/boba-670dba42c9644c000f9c6fe0/board
 
+## Tools used
+* Zenhub: Sprint board/issue tracking
+
+## Built with
+* ReactJS
+* Flask
+* SQLAlchemy
+* MaterialUI Library
+* Tailwind
+* Docker
+
 ## Setup
 * Install Python3.9
 * Install Node.js
