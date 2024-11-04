@@ -7,12 +7,12 @@ This version of the website is built using Flask and React, orchestrated with Do
 * Zenhub: Sprint board/issue tracking
 
 ## Built with
-* ReactJS
-* Flask
-* SQLAlchemy
-* MaterialUI Library
-* Tailwind
-* Docker
+* ReactJS: https://react.dev/
+* Flask: https://flask.palletsprojects.com/en/stable/
+* SQLAlchemy: https://www.sqlalchemy.org/
+* MaterialUI Library: https://mui.com/
+* Tailwind: https://tailwindcss.com/
+* Docker: https://www.docker.com/
 
 ## Setup
 * Install Python3.9
