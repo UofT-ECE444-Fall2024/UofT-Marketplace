@@ -1,39 +1,53 @@
-import React, { useState } from 'react'
+import React, { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 
-const NavItem = ({ href, children }) => (
-  <a
-    href={href}
-    className="relative px-3 py-2 text-gray-700 transition-colors duration-300 hover:text-blue-600 group"
-  >
-    {children}
-    <span className="absolute inset-x-0 bottom-0 h-0.5 bg-blue-600 transform scale-x-0 transition-transform duration-300 group-hover:scale-x-100"></span>
-  </a>
-)
+const NavItem = ({ to, children }) => {
+  const location = useLocation();
+  const isActive = location.pathname === to;
+  
+  return (
+    <Link
+      to={to}
+      className={`relative px-3 py-2 transition-colors duration-300 group ${
+        isActive ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'
+      }`}
+    >
+      {children}
+      <span className={`absolute inset-x-0 bottom-0 h-0.5 bg-blue-600 transform transition-transform duration-300 ${
+        isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+      }`}></span>
+    </Link>
+  );
+};
 
 export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
 
-  const toggleMenu = () => setIsOpen(!isOpen)
+  const toggleMenu = () => setIsOpen(!isOpen);
 
   const navItems = [
-    { name: 'Home', href: '#' },
-    { name: 'Search', href: '#' },
-    { name: 'Chat', href: '#' },
-    { name: 'Profile', href: '#' },
-  ]
+    { name: 'Home', to: '/home' },
+    { name: 'Search', to: '/search' },
+    { name: 'Chat', to: '/chat' },
+    { name: 'Profile', to: '/profile' },
+  ];
 
   return (
     <nav className="bg-white shadow-lg">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex-shrink-0">
-            <a href="#" className="text-2xl font-bold text-blue-600 transition-colors duration-300 hover:text-blue-800">
+            <Link 
+              to="/home" 
+              className="text-2xl font-bold text-blue-600 transition-colors duration-300 hover:text-blue-800"
+            >
               Logo
-            </a>
+            </Link>
           </div>
           <div className="hidden md:flex space-x-4">
             {navItems.map((item) => (
-              <NavItem key={item.name} href={item.href}>
+              <NavItem key={item.name} to={item.to}>
                 {item.name}
               </NavItem>
             ))}
@@ -75,15 +89,20 @@ export default function Navbar() {
         } overflow-hidden`}
       >
         {navItems.map((item) => (
-          <a
+          <Link
             key={item.name}
-            href={item.href}
-            className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-300"
+            to={item.to}
+            className={`block px-4 py-2 transition-colors duration-300 ${
+              location.pathname === item.to 
+                ? 'text-blue-600 bg-blue-50'
+                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+            }`}
+            onClick={() => setIsOpen(false)}
           >
             {item.name}
-          </a>
+          </Link>
         ))}
       </div>
     </nav>
-  )
+  );
 }
