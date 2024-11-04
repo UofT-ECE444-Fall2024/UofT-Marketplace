@@ -1,16 +1,73 @@
-from flask import jsonify, current_app, request
+from flask import Blueprint, jsonify, request
+from app.models import db, User
 
-@current_app.route('/api/auth/login', methods=['POST'])
+bp = Blueprint('main', __name__)
+
+@bp.route('/api/auth/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    full_name = data.get('full_name')
+    email = data.get('email')
+
+    if not all([username, password, full_name, email]):
+        return jsonify({
+            'status': 'error',
+            'message': 'All fields are required'
+        }), 400
+        
+    if User.query.filter_by(username=username).first():
+        return jsonify({
+            'status': 'error',
+            'message': 'Username already exists'
+        }), 409
+        
+    new_user = User(
+        username=username,
+        full_name=full_name,
+        email=email,
+        verified=False,
+        description=''
+    )
+    new_user.set_password(password)
+    
+    db.session.add(new_user)
+    db.session.commit()
+    
+    user_data = {
+        'username': username,
+        'full_name': full_name,
+        'verified': False,
+        'description': ''
+    }
+    
+    return jsonify({
+        'status': 'success',
+        'message': 'Registration successful',
+        'user': user_data
+    }), 201
+
+@bp.route('/api/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
     
-    if username == current_app.config['USERNAME'] and password == current_app.config['PASSWORD']:
+    user = User.query.filter_by(username=username).first()
+    
+    if user and user.check_password(password):
+        user_data = {
+            'username': user.username,
+            'full_name': user.full_name,
+            'verified': user.verified,
+            'description': user.description,
+            'is_admin': user.is_admin
+        }
         return jsonify({
             'status': 'success',
             'message': 'Login successful',
-            'user': {'username': username}
+            'user': user_data
         }), 200
     else:
         return jsonify({
@@ -18,6 +75,70 @@ def login():
             'message': 'Invalid username or password'
         }), 401
 
-@current_app.route('/')
+@bp.route('/api/profile/<username>', methods=['GET'])
+def get_profile(username):
+    # Query the database instead of checking config
+    user = User.query.filter_by(username=username).first()
+    
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found'
+        }), 404
+        
+    user_data = {
+        'username': user.username,
+        'full_name': user.full_name,
+        'verified': user.verified,
+        'description': user.description,
+        'is_admin': user.is_admin,
+        'email': user.email  # Include email if needed
+    }
+    
+    return jsonify({
+        'status': 'success',
+        'user': user_data
+    }), 200
+
+@bp.route('/')
 def home():
     return jsonify({"message": "Hello World!"})
+
+####################################DEBUGGING############################
+@bp.route('/api/debug/users', methods=['GET'])
+def debug_users():
+    users = User.query.all()
+    user_list = [{
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'full_name': user.full_name,  # Added full_name to debug output
+        'verified': user.verified,
+        'is_admin': user.is_admin,
+        'description': user.description  # Added description to debug output
+    } for user in users]
+    
+    return jsonify({
+        'user_count': len(user_list),
+        'users': user_list
+    })
+
+# Add a route to check specific user profile
+@bp.route('/api/debug/profile/<username>', methods=['GET'])
+def debug_profile(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found'
+        }), 404
+        
+    return jsonify({
+        'id': user.id,
+        'username': user.username,
+        'full_name': user.full_name,
+        'email': user.email,
+        'verified': user.verified,
+        'is_admin': user.is_admin,
+        'description': user.description
+    })
