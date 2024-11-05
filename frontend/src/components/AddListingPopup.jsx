@@ -19,8 +19,18 @@ function AddListingPopup({ open, onClose, onPublish }) {
   const [imageError, setImageError] = useState('');
   const [publishError, setPublishError] = useState('');
 
+  // Convert File objects to base64 strings
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   // Handle adding new images from file input
-  const handleAddImage = (e) => {
+  const handleAddImage = async (e) => {
     const files = Array.from(e.target.files);
     const validImages = files.filter(file => file.type.startsWith('image/'));
     
@@ -29,10 +39,14 @@ function AddListingPopup({ open, onClose, onPublish }) {
       return;
     }
 
-    const newImages = validImages.map(file => URL.createObjectURL(file)); 
-    setImages(prevImages => [...prevImages, ...newImages]);
-    setCurrentImageIndex(Math.min(currentImageIndex, images.length));
-    setImageError('');
+    try {
+      const base64Images = await Promise.all(validImages.map(fileToBase64));
+      setImages(prevImages => [...prevImages, ...base64Images]);
+      setCurrentImageIndex(Math.min(currentImageIndex, images.length));
+      setImageError('');
+    } catch (error) {
+      setImageError('Error processing images. Please try again.');
+    }
   };
 
   // Handle deleting the currently displayed image
@@ -53,7 +67,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
   };
 
   // Handle the publishing of the listing
-  const handlePublish = () => {
+  const handlePublish = async () => {
     setPublishError('');
     // Validate required fields
     if (!title || !price || !location || images.length === 0) {
@@ -62,26 +76,46 @@ function AddListingPopup({ open, onClose, onPublish }) {
     }
 
     // Start loading state
-    setLoading(true); 
-    onPublish({
-      image: images[0],
-      title,
-      price: '$' + price,
-      location,
-      description,
-    });
+    setLoading(true);
 
-    // Reset the form after publishing
-    setTimeout(() => {
-      setImages([]);
-      setCurrentImageIndex(0);
-      setTitle('');
-      setPrice('');
-      setLocation('');
-      setDescription('');
+    try {
+      const response = await fetch('http://localhost:5001/api/listings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: 1, // Replace with actual user ID from auth
+          title,
+          price,
+          location,
+          description,
+          images
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        // Use the returned item data from the server
+        onPublish(data.item);
+
+        // Reset form
+        setImages([]);
+        setCurrentImageIndex(0);
+        setTitle('');
+        setPrice('');
+        setLocation('');
+        setDescription('');
+        onClose();
+      } else {
+        setPublishError(data.message || 'Error creating listing');
+      }
+    } catch (error) {
+      setPublishError('Network error. Please try again.');
+    } finally {
       setLoading(false);
-      onClose();
-    }, 1000); // Optional delay for better UX
+    }
   };
 
   return (

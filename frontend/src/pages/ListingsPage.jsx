@@ -1,12 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Grid, Button, Box, Typography } from '@mui/material';
 import ListingCard from '../components/ListingCard';
 import AddListingPopup from '../components/AddListingPopup';
 
 function ListingsGrid() {
   const [listings, setListings] = useState([]);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [openPopup, setOpenPopup] = useState(false);
+
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  const fetchListings = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/listings');
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        setListings(data.listings);
+      } else {
+        setError(data.message || 'Error fetching listings');
+      }
+    } catch (error) {
+      setError('Network error. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenPopup = () => {
     setOpenPopup(true);
@@ -16,8 +38,8 @@ function ListingsGrid() {
     setOpenPopup(false);
   };
 
-  const handlePublish = (newListing) => {
-    setListings((prevListings) => [newListing, ...prevListings]);
+  const handlePublish = async (newListing) => {
+    await fetchListings();
     setOpenPopup(false);
   };
 
