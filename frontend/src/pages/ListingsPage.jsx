@@ -63,6 +63,7 @@ function ListingsGrid() {
                 title={listing.title}
                 location={listing.location}
                 price={listing.price}
+                id={listing.id}
               />
             </Grid>
           ))

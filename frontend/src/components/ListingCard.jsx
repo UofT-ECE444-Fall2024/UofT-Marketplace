@@ -1,17 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Card, CardContent, Typography, IconButton, Box } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
-function ListingCard({ image, title, location, price }) {
+function ListingCard({ image, title, location, price, id }) {
   const [isFavorite, setIsFavorite] = useState(false);
 
-  const handleClick = () => {
-    setIsFavorite(!isFavorite);
+  const handleFavoriteClick = useCallback((e) => {
+    // Stop the card click from firing
+    e.stopPropagation();
+    setIsFavorite((prev) => !prev);
+  }, []);
+
+  const handleCardClick = () => {
+    // Open a new tab when the card is clicked, URL based on item ID
+    const listingUrl = `/listing/${id}`;
+    window.open(listingUrl, '_blank');
   };
 
   return (
-    <Card sx={{ boxShadow: 2, borderRadius: 5, m: 2, overflow: 'hidden' }}>
+    <Card sx={{ boxShadow: 2, borderRadius: 5, m: 2, overflow: 'hidden' }} onClick={handleCardClick}>
       {/* Wrapping the image in a Box with padding to create a border effect */}
       <Box
         sx={{
@@ -40,7 +48,7 @@ function ListingCard({ image, title, location, price }) {
           <Typography variant="subtitle1" component="div" fontWeight="bold" sx={{ flexGrow: 1 }}>
             {title}
           </Typography>
-          <IconButton aria-label="add to favorites" onClick={handleClick}>
+          <IconButton aria-label="add to favorites" onClick={handleFavoriteClick}>
             {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
           </IconButton>
         </Box>
