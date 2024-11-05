@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
-from app.models import db, User
+from app.models import db, User, Item, ItemImage
+import base64
 
 bp = Blueprint('main', __name__)
 
@@ -104,6 +105,82 @@ def get_profile(username):
 def home():
     return jsonify({"message": "Hello World!"})
 
+@bp.route('/api/listings', methods=['POST'])
+def create_listing():
+    try:
+        data = request.json
+        
+        # Create new item
+        new_item = Item(
+            user_id=data['user_id'],
+            title=data['title'],
+            description=data['description'],
+            price=float(data['price'].replace('$', '')),
+            location=data['location']
+        )
+        db.session.add(new_item)
+        
+        # Handle images
+        for image_data in data['images']:
+            # Remove data URL prefix (e.g., 'data:image/jpeg;base64,')
+            image_parts = image_data.split(',')
+            content_type = image_parts[0].split(':')[1].split(';')[0]
+            binary_data = base64.b64decode(image_parts[1])
+            
+            new_image = ItemImage(
+                item=new_item,
+                image_data=binary_data,
+                content_type=content_type
+            )
+            db.session.add(new_image)
+        
+        db.session.commit()
+        
+        # Return the item data using the to_dict method
+        return jsonify({
+            'status': 'success',
+            'message': 'Listing created successfully',
+            'item': new_item.to_dict()
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@bp.route('/api/listings', methods=['GET'])
+def get_listings():
+    try:
+        items = Item.query.order_by(Item.created_at.desc()).all()
+        listings = []
+        
+        for item in items:
+            # Get the basic item data
+            item_data = item.to_dict()
+            
+            # Add the image if it exists
+            first_image = item.images[0] if item.images else None
+            if first_image:
+                image_b64 = base64.b64encode(first_image.image_data).decode('utf-8')
+                item_data['image'] = f'data:{first_image.content_type};base64,{image_b64}'
+            else:
+                item_data['image'] = None
+                
+            listings.append(item_data)
+        
+        return jsonify({
+            'status': 'success',
+            'listings': listings
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+    
 ####################################DEBUGGING############################
 @bp.route('/api/debug/users', methods=['GET'])
 def debug_users():
