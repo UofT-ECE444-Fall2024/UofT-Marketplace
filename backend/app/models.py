@@ -55,13 +55,27 @@ class Item(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     images = db.relationship('ItemImage', backref='item', lazy=True, cascade='all, delete-orphan')
 
+    # Add a relationship to reference the user (seller)
+    seller = db.relationship('User', backref='items')
+
     def to_dict(self):
         return {
             'id': self.id,
             'title': self.title,
             'price': f'${self.price}',
             'location': self.location,
-            'description': self.description
+            'description': self.description,
+            'status': self.status,
+            'created_at': self.created_at,
+            'updated_at': self.updated_at,
+            'seller': {
+                'id': self.seller.id,
+                'username': self.seller.username,
+                'full_name': self.seller.full_name,
+                'email': self.seller.email,
+                'description': self.seller.description,
+                'verified': self.seller.verified
+            }
         }
 
 class ItemImage(db.Model):

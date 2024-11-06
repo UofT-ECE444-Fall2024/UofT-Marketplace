@@ -30,6 +30,7 @@ function ListingDetail() {
     };
 
     fetchListingDetail();
+
   }, [id]);
 
   // Handle previous image click
@@ -81,7 +82,7 @@ function ListingDetail() {
           }}
         ><Box
             sx={{
-              width: '50%',
+              width: '70%',
               position: 'relative',
               height: '100%', // Make image container fill the height
               borderRadius: '8px',
@@ -138,19 +139,38 @@ function ListingDetail() {
             </IconButton>
           </Box>
 
-          <CardContent sx={{ width: '50%' }}>
+          <CardContent sx={{ width: '30%' }}>
             <Typography variant="h5" component="div" fontWeight="bold" align='left'>
               {listing.title}
             </Typography>
             <Typography variant="body2" color="text.secondary" align='left'>
               {listing.location}
             </Typography>
-            <Typography variant="h6" color="text.primary" align='left'>
-              Price: {listing.price}
+            <Typography variant="body1" color="text.primary" fontWeight="bold" align='left'>
+              Price: {listing.price} ~ {listing.status}
             </Typography>
             <Typography variant="body1" sx={{ mt: 2 }} align='left'>
               {listing.description}
             </Typography>
+
+            <hr style={{ margin: '16px 0', border: '1px solid #ccc' }} />
+
+            <Typography variant="h6" component="div" fontWeight="bold" align="left" sx={{ marginBottom: '8px' }}>
+              Seller Information:
+            </Typography>
+
+            <Box sx={{ marginBottom: '16px' }}>
+              <Typography variant="body1" color="text.primary" align="left" sx={{ fontWeight: 'bold' }}>
+                Name: {listing.seller.full_name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" align="left">
+                Description: {listing.seller.description || 'No description available'}
+              </Typography>
+              <Typography variant="body2" color="text.primary" align="left">
+                Status: {listing.seller.verified ? 'Verified' : 'Not Verified'}
+              </Typography>
+            </Box>
+
             <CardActions>
               {/* TO DO: connect this button to the chat function to contact seller! */}
               <Button
