@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, CardContent, Typography, Box, CircularProgress, CardActions, Button } from '@mui/material';
+import { Card, CardContent, Typography, Box, CircularProgress, CardActions, Button, IconButton} from '@mui/material';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+
 
 function ListingDetail() {
   const { id } = useParams(); // Get the ID from the URL
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     console.log('Listing ID:', id); 
@@ -28,6 +32,20 @@ function ListingDetail() {
     fetchListingDetail();
   }, [id]);
 
+  // Handle previous image click
+  const handlePrevImage = () => {
+    if (listing && listing.images) {
+      setCurrentImageIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : listing.images.length - 1));
+    }
+  };
+
+  // Handle next image click
+  const handleNextImage = () => {
+    if (listing && listing.images) {
+      setCurrentImageIndex((prevIndex) => (prevIndex < listing.images.length - 1 ? prevIndex + 1 : 0));
+    }
+  };
+
   if (loading) {
     return <CircularProgress />; // Show loading spinner while fetching
   }
@@ -40,48 +58,121 @@ function ListingDetail() {
     return <Typography variant="h6">No listing found.</Typography>; // If listing is not found
   }
 
-  return (
-    <Card sx={{ maxWidth: 600, margin: 'auto', mt: 4 }}>
-      <Box
-        sx={{
-          position: 'relative',
-          width: '100%',
-          paddingTop: '75%', // Aspect ratio 4:3
-          overflow: 'hidden',
-          backgroundColor: '#ffffff',
-        }}
-      >
-        <img
-          src={listing.image ? listing.image : '/path/to/default-image.jpg'} // Fallback image
-          alt={listing.title}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
+  return  (
+    <Box
+      sx={{
+        display: 'flex',
+        justifyContent: 'center', // Center horizontally
+        alignItems: 'center', // Center vertically
+        minHeight: '100vh', // Full viewport height
+        padding: '16px', // Add some padding around the card
+        boxSizing: 'border-box', // Ensure padding is included in the height calculation
+      }}
+    >
+      <Card sx={{ width: '100%', maxWidth: 1200, height: '80vh', display: 'flex', flexDirection: 'column' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'row',
+            gap: '16px',
+            justifyContent: 'space-between',
+            padding: '16px',
+            height: '100%', // Make the Box fill the available height
           }}
-        />
-      </Box>
-      <CardContent>
-        <Typography variant="h5" component="div" fontWeight="bold">
-          {listing.title}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
-          {listing.location}
-        </Typography>
-        <Typography variant="h6" color="text.primary">
-          {listing.price}
-        </Typography>
-        <Typography variant="body1" sx={{ mt: 2 }}>
-          {listing.description}
-        </Typography>
-        <CardActions>
-          <Button size="small">Contact Seller</Button>
-        </CardActions>
-      </CardContent>
-    </Card>
+        ><Box
+            sx={{
+              width: '50%',
+              position: 'relative',
+              height: '100%', // Make image container fill the height
+              borderRadius: '8px',
+              overflow: 'hidden', // Prevent image overflow
+            }}
+          >
+            {/* Slideshow Image */}
+            <img
+              src={listing.images ? listing.images[currentImageIndex] : '/path/to/default-image.jpg'}
+              alt={`Listing Image ${currentImageIndex + 1}`}
+              style={{
+                width: '100%',
+                height: '100%', // Set height to 100% of the container
+                objectFit: 'contain', // Change to contain to fit the image within the container
+                borderRadius: '8px',
+              }}
+            />
+            
+            {/* Navigation arrows */}
+            <IconButton
+              onClick={handlePrevImage}
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                left: '10px',
+                transform: 'translateY(-50%)',
+                zIndex: 10,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                },
+              }}
+            >
+              <ArrowBackIosNewIcon />
+            </IconButton>
+            
+            <IconButton
+              onClick={handleNextImage}
+              sx={{
+                position: 'absolute',
+                top: '50%',
+                right: '10px',
+                transform: 'translateY(-50%)',
+                zIndex: 10,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                },
+              }}
+            >
+              <ArrowForwardIosIcon />
+            </IconButton>
+          </Box>
+
+          <CardContent sx={{ width: '50%' }}>
+            <Typography variant="h5" component="div" fontWeight="bold" align='left'>
+              {listing.title}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" align='left'>
+              {listing.location}
+            </Typography>
+            <Typography variant="h6" color="text.primary" align='left'>
+              Price: {listing.price}
+            </Typography>
+            <Typography variant="body1" sx={{ mt: 2 }} align='left'>
+              {listing.description}
+            </Typography>
+            <CardActions>
+              {/* TO DO: connect this button to the chat function to contact seller! */}
+              <Button
+                  size="small"
+                  sx={{
+                    backgroundColor: '#007BFF', // Blue color
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: '#0056b3', // Darker blue for hover
+                    },
+                    borderRadius: '8px', // Rounded corners
+                    padding: '8px 16px', // Padding for a nicer look
+                    fontWeight: 'bold', // Bold text
+                  }}
+                >           
+                Contact Seller
+              </Button>
+            </CardActions>
+          </CardContent>
+        </Box>
+      </Card>
+    </Box>
   );
 }
 

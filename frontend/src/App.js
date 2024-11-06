@@ -22,7 +22,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Auth />} />
         <Route path="/home" element={<WithNavbar><ListingsGrid /></WithNavbar>} />
-        <Route path="/listings/:id" element={<ListingDetail />} /> {/* Dynamic route for listing details */}
+        <Route path="/listings/:id" element={<WithNavbar><ListingDetail /></WithNavbar>} /> {/* Dynamic route for listing details */}
         {/* <Route path="*" element={<NotFound />} /> Catch-all for 404 errors */}
         <Route path="/chat" element={<WithNavbar><Chat /></WithNavbar>} />
         <Route path="/profile" element={<WithNavbar><Profile /></WithNavbar>} />
