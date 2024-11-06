@@ -1,3 +1,5 @@
+import os
+from pathlib import Path
 from flask import Flask
 from flask_cors import CORS
 from app.models import db, User
@@ -6,9 +8,13 @@ def create_app():
     app = Flask(__name__)
     CORS(app)
     
+    basedir = Path(__file__).resolve().parent
+    DATABASE = "flaskr.db"
+    db_uri = os.getenv("DATABASE_URL", f"sqlite:///{Path(basedir).joinpath(DATABASE)}")
+    
     # Database configuration
     app.config['SECRET_KEY'] = 'your-secret-key-here'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     # Initialize database
