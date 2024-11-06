@@ -5,5 +5,8 @@
     "@fontsource/roboto": "^5.1.0",
     "@mui/material": "^6.1.5",
     "react-router-dom": "^6.27.0"
+  },
+  "devDependencies": {
+    "ajv": "^7.2.4"
   }
 }

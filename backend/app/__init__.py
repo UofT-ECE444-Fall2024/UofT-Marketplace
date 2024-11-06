@@ -4,8 +4,10 @@ from app.models import db, User
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
     
+    CORS(app, resources={r"/api/*": {"origins": "*"}})  # danger?!?!!? who knows
+    app.config['CORS_HEADERS'] = 'Content-Type'
+
     # Database configuration
     app.config['SECRET_KEY'] = 'your-secret-key-here'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
