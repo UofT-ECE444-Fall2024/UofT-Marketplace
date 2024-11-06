@@ -180,6 +180,44 @@ def get_listings():
             'status': 'error',
             'message': str(e)
         }), 500
+
+@bp.route('/api/listings/<int:id>', methods=['GET'])
+def get_listing(id):
+    try:
+        # Retrieve the specific item by ID
+        item = Item.query.get(id)
+
+        if item is None:
+            return jsonify({
+                'status': 'error',
+                'message': 'Listing not found'
+            }), 404  # Return 404 if the item is not found
+
+        # Convert item data to dictionary format
+        item_data = item.to_dict()
+
+        # Initialize a list to store all the images
+        image_list = []
+
+        # Loop through all the images
+        for image in item.images:
+            # Encode each image to base64
+            image_b64 = base64.b64encode(image.image_data).decode('utf-8')
+            image_list.append(f'data:{image.content_type};base64,{image_b64}')
+
+        # Add the list of images to the item_data
+        item_data['images'] = image_list if image_list else None
+
+        return jsonify({
+            'status': 'success',
+            'listing': item_data  # Return the listing data
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500  # Return a server error status if something goes wrong
     
 ####################################DEBUGGING############################
 @bp.route('/api/debug/users', methods=['GET'])

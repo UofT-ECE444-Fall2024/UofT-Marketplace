@@ -14,7 +14,7 @@ function ListingCard({ image, title, location, price, id }) {
 
   const handleCardClick = () => {
     // Open a new tab when the card is clicked, URL based on item ID
-    const listingUrl = `/listing/${id}`;
+    const listingUrl = `/listings/${id}`;
     window.open(listingUrl, '_blank');
   };
 
