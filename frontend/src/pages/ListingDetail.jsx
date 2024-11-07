@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, Typography, Box, CircularProgress, CardActions, Button, IconButton} from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
@@ -11,27 +11,66 @@ function ListingDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [userData, setUserData] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('Listing ID:', id); 
-    const fetchListingDetail = async () => {
-      try {
-        const response = await fetch(`http://localhost:5001/api/listings/${id}`); // Fetch details for the specific listing
-        if (!response.ok) {
-          throw new Error('Failed to fetch listing details');
-        }
-        const data = await response.json();
-        setListing(data.listing); // Assuming the API returns the listing in 'listing' field
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchListingDetail();
-
+    fetchProfile();
+    console.log(listing);
   }, [id]);
+
+  const fetchListingDetail = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/listings/${id}`); // Fetch details for the specific listing
+      if (!response.ok) {
+        throw new Error('Failed to fetch listing details');
+      }
+      const data = await response.json();
+      setListing(data.listing); // Assuming the API returns the listing in 'listing' field
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      if (!storedUser?.username) {
+        throw new Error('Not logged in');
+      }
+
+      const response = await fetch(`http://localhost:5001/api/profile/${storedUser.username}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setUserData(data.user);
+      } else {
+        setError(data.message);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/listings/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        navigate('/listings');
+      }
+      else {
+        throw new Error('Failed to delete listing');
+      }
+      navigate('/'); // Redirect to homepage after successful deletion
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   // Handle previous image click
   const handlePrevImage = () => {
@@ -188,6 +227,47 @@ function ListingDetail() {
                 >           
                 Contact Seller
               </Button>
+
+              {userData.username !== listing.seller.username && (
+                <Box sx={{ mt: 2 }}>
+                <Button
+                  size="small"
+                  sx={{
+                    backgroundColor: '#007BFF',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: '#0056b3',
+                    },
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontWeight: 'bold',
+                    width: '90%', // Make both buttons full width
+                  }}
+                  onClick={() => navigate(`/edit-listing/${id}`)}
+                >
+                  Edit Listing
+                </Button>
+                <Button
+                  size="small"
+                  sx={{
+                    backgroundColor: 'red',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: '#d40000', // Darker red for hover
+                    },
+                    borderRadius: '8px',
+                    padding: '8px 16px',
+                    fontWeight: 'bold',
+                    width: '90%', // Make both buttons full width
+                  }}
+                  color="error"
+                  onClick={handleDelete}
+                >
+                  Delete Listing
+                </Button>
+              </Box>
+              
+              )}
             </CardActions>
           </CardContent>
         </Box>
