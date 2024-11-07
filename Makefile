@@ -26,7 +26,7 @@ frontend-start:
 	cd $(FRONTEND_DIR) && npm start
 
 backend-start:
-	. $(VENV_DIR)/bin/activate && FLASK_APP=$(FLASK_APP) $(PYTHON) -m flask run --reload
+	. $(VENV_DIR)/bin/activate && FLASK_APP=$(FLASK_APP) $(PYTHON) -m flask run --reload --port=5001
 
 tailwind-watch:
 	cd $(FRONTEND_DIR) && npx tailwindcss -i ./src/index.css -o ./src/output.css --watch
