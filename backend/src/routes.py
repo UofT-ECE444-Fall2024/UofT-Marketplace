@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from src.models import db, User, Item, ItemImage
+from src.search_algorithm import search_algorithm
 import base64
 
 bp = Blueprint('main', __name__)
@@ -152,8 +153,15 @@ def create_listing():
 
 @bp.route('/api/listings', methods=['GET'])
 def get_listings():
+    search_query = request.args.get("search")
+
     try:
         items = Item.query.order_by(Item.created_at.desc()).all()
+
+        # Only perform search if search query is in the URL
+        if search_query:
+            items = search_algorithm(items, search_query)
+
         listings = []
         
         for item in items:
@@ -218,7 +226,7 @@ def get_listing(id):
             'status': 'error',
             'message': str(e)
         }), 500  # Return a server error status if something goes wrong
-    
+
 ####################################DEBUGGING############################
 @bp.route('/api/debug/users', methods=['GET'])
 def debug_users():
