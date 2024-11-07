@@ -3,6 +3,8 @@ import { Grid, Button, Box, Typography } from '@mui/material';
 import ListingCard from '../components/ListingCard';
 import AddListingPopup from '../components/AddListingPopup';
 
+
+
 function ListingsGrid() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +19,7 @@ function ListingsGrid() {
     try {
       const response = await fetch('http://localhost:5001/api/listings');
       const data = await response.json();
-      
+
       if (data.status === 'success') {
         setListings(data.listings);
       } else {
@@ -58,7 +60,7 @@ function ListingsGrid() {
         {listings.length > 0 ? (
           listings.map((listing, index) => (
             <Grid item key={index} xs={12} sm={6} md={4} lg={3}>
-              <ListingCard 
+              <ListingCard
                 image={listing.image}
                 title={listing.title}
                 location={listing.location}
