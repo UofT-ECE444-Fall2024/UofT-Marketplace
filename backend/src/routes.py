@@ -145,8 +145,16 @@ def create_listing():
 
 @bp.route('/api/listings', methods=['GET'])
 def get_listings():
+    search_query = request.args.get("search")
+
     try:
         items = Item.query.order_by(Item.created_at.desc()).all()
+
+        # Only perform search if search query is in the URL
+        if search_query:
+            from app.search_algorithm import search_algorithm
+            items = search_algorithm(items, search_query)
+
         listings = []
         
         for item in items:
