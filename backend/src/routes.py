@@ -87,14 +87,7 @@ def get_profile(username):
             'message': 'User not found'
         }), 404
         
-    user_data = {
-        'username': user.username,
-        'full_name': user.full_name,
-        'verified': user.verified,
-        'description': user.description,
-        'is_admin': user.is_admin,
-        'email': user.email  # Include email if needed
-    }
+    user_data = user.to_dict()
     
     return jsonify({
         'status': 'success',
@@ -109,10 +102,10 @@ def home():
 def create_listing():
     try:
         data = request.json
-        
+
         # Create new item
         new_item = Item(
-            user_id=data['user_id'],
+            user_id=int(data['user_id']),
             title=data['title'],
             description=data['description'],
             price=float(data['price'].replace('$', '')),
@@ -147,7 +140,7 @@ def create_listing():
         db.session.rollback()
         return jsonify({
             'status': 'error',
-            'message': str(e)
+            'message': error
         }), 500
 
 @bp.route('/api/listings', methods=['GET'])
@@ -219,6 +212,101 @@ def get_listing(id):
             'message': str(e)
         }), 500  # Return a server error status if something goes wrong
     
+@bp.route('/api/listings/<int:id>', methods=['PUT'])
+def update_listing(id):
+    try:
+        data = request.json
+
+        # Retrieve the existing item by ID
+        item = Item.query.get(id)
+
+        if not item:
+            return jsonify({
+                'status': 'error',
+                'message': 'Listing not found'
+            }), 404
+
+        # Update item fields
+        item.title = data.get('title', item.title)
+        item.description = data.get('description', item.description)
+        item.price = float(data['price'].replace('$', '')) if 'price' in data else item.price
+        item.location = data.get('location', item.location)
+
+        # Handle image updates
+        for image_data in data.get('images', []):
+            # Remove data URL prefix (e.g., 'data:image/jpeg;base64,')
+            image_parts = image_data.split(',')
+            content_type = image_parts[0].split(':')[1].split(';')[0]
+            binary_data = base64.b64decode(image_parts[1])
+
+            new_image = ItemImage(
+                item=item,
+                image_data=binary_data,
+                content_type=content_type
+            )
+            db.session.add(new_image)
+
+        db.session.commit()
+
+        # Return the updated item data using the to_dict method
+        return jsonify({
+            'status': 'success',
+            'message': 'Listing updated successfully',
+            'item': item.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@bp.route('/api/listings/<int:listing_id>/images/<int:image_index>', methods=['DELETE'])
+def delete_image(listing_id, image_index):
+    try:
+        item = Item.query.get(listing_id)
+        if not item:
+            return jsonify({'status': 'error', 'message': 'Listing not found'}), 404
+
+        # Get the list of images for the item
+        images = item.images
+        if image_index < 0 or image_index >= len(images):
+            return jsonify({'status': 'error', 'message': 'Image index out of range'}), 404
+
+        item.images.pop(image_index)
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success', 
+            'message': 'Image deleted successfully'
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error', 
+            'message': str(e)
+        }), 500
+
+    
+@bp.route('/api/listings/<int:id>', methods=['DELETE'])
+def delete_listing(id):
+    # Retrieve the specific item by ID
+    item = Item.query.get(id)
+
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({
+        "status": "success", 
+        "message": "Listing deleted successfully"
+    }), 200
+
+    return jsonify({
+        "status": "error", 
+        "message": "Unauthorized or listing not found"
+    }), 404
+
 ####################################DEBUGGING############################
 @bp.route('/api/debug/users', methods=['GET'])
 def debug_users():
