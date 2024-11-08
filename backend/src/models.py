@@ -50,6 +50,7 @@ class Item(db.Model):
     description = db.Column(db.Text)
     price = db.Column(db.Numeric(10, 2), nullable=False)
     location = db.Column(db.String(255), nullable=False)
+    condition = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(50), default='Available')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -65,6 +66,7 @@ class Item(db.Model):
             'price': f'${self.price}',
             'location': self.location,
             'description': self.description,
+            'condition': self.condition,
             'status': self.status,
             'created_at': self.created_at,
             'updated_at': self.updated_at,

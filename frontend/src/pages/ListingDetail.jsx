@@ -149,7 +149,10 @@ function ListingDetail() {
             <Typography variant="body1" color="text.primary" fontWeight="bold" align='left'>
               Price: {listing.price} ~ {listing.status}
             </Typography>
-            <Typography variant="body1" sx={{ mt: 2 }} align='left'>
+            <Typography variant="body2" sx={{ mt: 2 }} color="text.secondary" align='left'>
+              Condition: {listing.condition}
+            </Typography>
+            <Typography variant="body1" align='left'>
               {listing.description}
             </Typography>
 

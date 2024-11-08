@@ -16,6 +16,13 @@ const LOCATIONS = [
   'Robarts'
 ];
 
+const CONDITIONS = [
+  'New',
+  'Used - Like New',
+  'Used - Good',
+  'Used - Fair'
+]
+
 function AddListingPopup({ open, onClose, onPublish }) {
   // State variables to manage form and image data
   const [images, setImages] = useState([]);
@@ -24,6 +31,8 @@ function AddListingPopup({ open, onClose, onPublish }) {
   const [price, setPrice] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
+  const [condition, setCondition] = useState('');
+  const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [imageError, setImageError] = useState('');
   const [publishError, setPublishError] = useState('');
@@ -79,7 +88,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
   const handlePublish = async () => {
     setPublishError('');
     // Validate required fields
-    if (!title || !price || !location || images.length === 0) {
+    if (!title || !price || !location || !condition || images.length === 0) {
       setPublishError('Please fill in all required fields and add at least one image.');
       return;
     }
@@ -98,6 +107,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
           title,
           price,
           location,
+          condition,
           description,
           images
         })
@@ -115,6 +125,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
         setTitle('');
         setPrice('');
         setLocation('');
+        setCondition('');
         setDescription('');
         onClose();
       } else {
@@ -268,6 +279,18 @@ function AddListingPopup({ open, onClose, onPublish }) {
               >
                 {LOCATIONS.map(loc => (
                   <MenuItem key={loc} value={loc}>{loc}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Condition</InputLabel>
+              <Select
+                value={condition}
+                label="Condition"
+                onChange={(e) => setCondition(e.target.value)}
+              >
+                {CONDITIONS.map(con => (
+                  <MenuItem key={con} value={con}>{con}</MenuItem>
                 ))}
               </Select>
             </FormControl>

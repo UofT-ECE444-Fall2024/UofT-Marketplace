@@ -117,7 +117,8 @@ def create_listing():
             title=data['title'],
             description=data['description'],
             price=float(data['price'].replace('$', '')),
-            location=data['location']
+            location=data['location'],
+            condition=data['condition']
         )
         db.session.add(new_item)
         
