@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from flask import Flask
 from flask_cors import CORS
-from app.models import db, User
+from src.models import db, User
 
 def create_app():
     app = Flask(__name__)
@@ -39,7 +39,7 @@ def create_app():
             db.session.add(admin_user)
             db.session.commit()
 
-    from app import routes
+    from src import routes
     app.register_blueprint(routes.bp)
 
     return app

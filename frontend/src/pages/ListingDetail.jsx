@@ -182,7 +182,7 @@ function ListingDetail() {
                       backgroundColor: '#0056b3', // Darker blue for hover
                     },
                     borderRadius: '8px', // Rounded corners
-                    padding: '8px 16px', // Padding for a nicer look
+                    padding: '8px 16px', // Padding
                     fontWeight: 'bold', // Bold text
                   }}
                 >           

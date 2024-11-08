@@ -4,6 +4,11 @@
     "@emotion/styled": "^11.13.0",
     "@fontsource/roboto": "^5.1.0",
     "@mui/material": "^6.1.5",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
     "react-router-dom": "^6.27.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }
