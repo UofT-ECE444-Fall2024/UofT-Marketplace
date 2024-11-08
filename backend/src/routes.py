@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from backend.app.models import db, User, Item, ItemImage
+from src.models import db, User, Item, ItemImage
 import base64
 
 bp = Blueprint('main', __name__)

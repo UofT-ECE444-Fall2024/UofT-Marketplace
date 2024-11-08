@@ -1,5 +1,5 @@
 from app.api import app, db
-from app.models import Item
+from src.models import Item
 
 
 with app.app_context():

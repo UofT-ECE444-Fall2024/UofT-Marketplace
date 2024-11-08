@@ -1,7 +1,7 @@
 import json
 import pytest
-from backend.app import create_app, db  # Absolute import path
-from backend.app.models import User, Item, ItemImage
+from src import create_app, db  # Absolute import path
+from src.models import User, Item, ItemImage
 
 @pytest.fixture
 def client():
