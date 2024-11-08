@@ -63,34 +63,25 @@ const ListingsPage = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [query, setQuery] = useState("");
+
+  const [queries, setQueries] = useState({});
 
   const [searchParams, setSearchParams] = useSearchParams();
-
   const navigate = useNavigate();
 
-  const handleSearchChange = (e) => {
-    setQuery(e.target.value)
-  };
-
-  const handleSearchEnterSubmit = (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault()  
-      navigate(`?search=${encodeURIComponent(query)}`);
+  const searchAndFilterNavigate = (queries) => {
+    let url_query_string = "?";
+    for (const query in queries) {
+      url_query_string += query + "=" + queries[query] + "&";
     }
-  };
-
-  const handleSearchClickSubmit = (event) => {
-    event.preventDefault()  
-    navigate(`?search=${encodeURIComponent(query)}`);
-  };
+    // Trim off last "&"
+    url_query_string = url_query_string.substring(0, url_query_string.length - 1);
+    navigate(url_query_string);
+  }
 
   useEffect(() => {
-    const search_query_string = searchParams.get('search')
-    console.log(search_query_string)
-    const apiSearchParams = search_query_string ? `?search=${search_query_string}` : '';
-
-    fetch(`http://localhost:5001/api/listings${apiSearchParams}`)
+    const apiSearchQuery = searchParams.toString().length > 0 ? `?${searchParams.toString()}` : "";
+    fetch(`http://localhost:5001/api/listings${apiSearchQuery}`)
         .then(response => response.json())
         .then(data => {
           if (data.status === 'success') {
@@ -103,7 +94,7 @@ const ListingsPage = () => {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <SearchAndFilter handleSearchChange={handleSearchChange} handleSearchClickSubmit={handleSearchClickSubmit} handleSearchEnterSubmit={handleSearchEnterSubmit} />
+      <SearchAndFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
       <ListingsGrid listings={listings} />
     </Box>
   )
