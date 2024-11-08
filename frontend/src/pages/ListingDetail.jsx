@@ -243,7 +243,7 @@ const [profileLoading, setProfileLoading] = useState(true);
                     color: 'white',
                     '&:hover': { backgroundColor: '#0056b3' },
                     borderRadius: '8px', // Rounded corners
-                    padding: '8px 16px', // Padding for a nicer look
+                    padding: '8px 16px', // Padding
                     fontWeight: 'bold', // Bold text
                   }}
                 >           
