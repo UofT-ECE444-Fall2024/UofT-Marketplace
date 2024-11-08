@@ -43,10 +43,12 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
         const files = Array.from(e.target.files);
         const validImages = files.filter(file => file.type.startsWith('image/'));
         
-        if (validImages.length + images.length > 5) {
+        // Limit the total number of images to 5
+        const totalImages = validImages.length + images.length;
+        if (totalImages > 5) {
             setImageError('You can only upload up to 5 images.');
             return;
-          }
+        }
       
         try {
             const base64Images = await Promise.all(validImages.map(fileToBase64));
