@@ -1,8 +1,71 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, redirect, session, url_for
 from app.models import db, User, Item, ItemImage
 import base64
+from stytch import Client as StytchClient
+import os
+from dotenv import load_dotenv  # Add this import
+import requests
 
 bp = Blueprint('main', __name__)
+load_dotenv()
+
+# Initialize Stytch client with your credentials
+stytch_client = StytchClient(
+  project_id=os.environ['STYTCH_PROJECT_ID'],
+  secret=os.environ['STYTCH_SECRET'],
+  environment="test"
+)
+
+# Route to start Microsoft OAuth login
+@bp.route('/login')
+def login_with_microsoft():
+    response = stytch_client.oauth.microsoft.start(
+        login_redirect_url='http://localhost:5001/authenticate',
+        signup_redirect_url='http://localhost:5001/authenticate',
+        custom_scopes=["User.Read"]
+    )
+    return redirect(response['url'])
+
+# Route to handle OAuth callback
+@bp.route('/authenticate')
+def authenticate():
+    token = request.args.get('token')
+    if token:
+        try:
+            # Authenticate with Stytch
+            response = stytch_client.oauth.authenticate(token)
+            user = response.user  # This is a User object, not a dict
+            
+            # Extract relevant user info
+            user_info = {
+                'user_id': response.user_id,
+                'name': f"{user.name.first_name} {user.name.last_name}".strip(),
+                'email': user.emails[0] if user.emails else None,
+                'provider_type': user.providers[0].provider_type if user.providers else None,
+                'created_at': user.created_at.isoformat() if user.created_at else None
+            }
+            
+            # Store in session if needed
+            session['user'] = user_info
+            
+            # Return JSON response
+            return jsonify({
+                'status': 'success',
+                'message': f"Authenticated! Welcome {user_info['name']}",
+                'user': user_info
+            }), 200
+            
+        except Exception as e:
+            print(f"Authentication error: {str(e)}")  # Add this for debugging
+            return jsonify({
+                'status': 'error',
+                'message': str(e)
+            }), 400
+    else:
+        return jsonify({
+            'status': 'error',
+            'message': 'Authentication failed - no token provided'
+        }), 400
 
 @bp.route('/api/auth/register', methods=['POST'])
 def register():
