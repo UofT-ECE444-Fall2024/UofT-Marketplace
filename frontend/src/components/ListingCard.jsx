@@ -19,7 +19,7 @@ function ListingCard({ image, title, location, price, id }) {
   };
 
   return (
-    <Card sx={{ boxShadow: 2, borderRadius: 5, m: 2, overflow: 'hidden' }} onClick={handleCardClick}>
+    <Card sx={{ boxShadow: 2, borderRadius: 5, m: 2, overflow: 'hidden', maxWidth: 400}} onClick={handleCardClick}>
       {/* Wrapping the image in a Box with padding to create a border effect */}
       <Box
         sx={{
