@@ -8,3 +8,5 @@ MarkupSafe==3.0.1
 Werkzeug==2.2.2
 zipp==3.20.2
 SQLAlchemy==2.0.35
+Flask-SQLAlchemy
+Flask-Cors

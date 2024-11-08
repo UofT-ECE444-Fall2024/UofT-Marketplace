@@ -5,7 +5,16 @@ import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
+import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
 
+const LOCATIONS = [
+  'Bahen',
+  'University College',
+  'Hart House',
+  'Sid Smith',
+  'Myhal',
+  'Robarts'
+];
 
 function AddListingPopup({ open, onClose, onPublish }) {
   // State variables to manage form and image data
@@ -33,7 +42,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
   const handleAddImage = async (e) => {
     const files = Array.from(e.target.files);
     const validImages = files.filter(file => file.type.startsWith('image/'));
-    
+
     if (validImages.length + images.length > 5) {
       setImageError('You can only upload up to 5 images.');
       return;
@@ -95,7 +104,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
       });
 
       const data = await response.json();
-      
+
       if (data.status === 'success') {
         // Use the returned item data from the server
         onPublish(data.item);
@@ -223,8 +232,8 @@ function AddListingPopup({ open, onClose, onPublish }) {
               Add Photo
               <input type="file" hidden multiple onChange={handleAddImage} />
             </Button>
-            
-            {imageError && ( 
+
+            {imageError && (
               <Typography color="error" variant="body2" sx={{ mt: 1 }}>
                 {imageError}
               </Typography>
@@ -250,14 +259,18 @@ function AddListingPopup({ open, onClose, onPublish }) {
               value={price}
               onChange={(e) => setPrice(e.target.value)}
             />
-            <TextField
-              label="Location"
-              required
-              fullWidth
-              margin="normal"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Location</InputLabel>
+              <Select
+                value={location}
+                label="Location"
+                onChange={(e) => setLocation(e.target.value)}
+              >
+                {LOCATIONS.map(loc => (
+                  <MenuItem key={loc} value={loc}>{loc}</MenuItem>
+                ))}
+              </Select>
+            </FormControl>
             <TextField
               label="Description"
               multiline
