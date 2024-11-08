@@ -18,27 +18,55 @@ const Auth = () => {
     // Clear loading state when component mounts or URL changes
     setIsLoading(false);
     
+    // Debug: Log the current URL and search params
+    console.log('Current location:', location);
+    console.log('Search params:', location.search);
+    
     // Check for error or success messages in URL parameters
     const params = new URLSearchParams(location.search);
     const status = params.get('status');
     const message = params.get('message');
+    const userData = params.get('userData');
+    
+    console.log('Status:', status);
+    console.log('Message:', message);
+    console.log('User data:', userData);
     
     if (status === 'error') {
       setError(decodeURIComponent(message));
     } else if (status === 'success') {
       setSuccess(decodeURIComponent(message));
-      const userData = params.get('userData');
       if (userData) {
-        const decodedUserData = JSON.parse(
-          '{"' + 
-          decodeURIComponent(userData)
-            .replace(/"/g, '\\"')
-            .replace(/&/g, '","')
-            .replace(/=/g,'":"') + 
-          '"}'
-        );
-        localStorage.setItem('user', JSON.stringify(decodedUserData));
-        setTimeout(() => navigate('/home'), 1500);
+        try {
+          // Parse the userData more reliably
+          const decodedString = decodeURIComponent(userData);
+          console.log('Decoded user data string:', decodedString);
+          
+          const pairs = decodedString.split('&');
+          const userObject = {};
+          
+          pairs.forEach(pair => {
+            const [key, value] = pair.split('=');
+            userObject[key] = decodeURIComponent(value);
+          });
+          
+          console.log('Parsed user object:', userObject);
+          
+          // Store in localStorage
+          localStorage.setItem('user', JSON.stringify(userObject));
+          console.log('Data stored in localStorage');
+          
+          // Navigate after a short delay to show the success message
+          setTimeout(() => {
+            console.log('Navigating to /home');
+            navigate('/home');
+          }, 1500);
+        } catch (error) {
+          console.error('Error processing user data:', error);
+          setError('Error processing login data');
+        }
+      } else {
+        console.warn('No user data received with success status');
       }
     }
   }, [location, navigate]);
@@ -49,6 +77,17 @@ const Auth = () => {
     const microsoftOAuthURL = `${STYTCH_BASE_URL}/oauth/microsoft/start?public_token=${STYTCH_PUBLIC_TOKEN}&login_redirect_url=${REDIRECT_URL}&signup_redirect_url=${REDIRECT_URL}`;
     window.location.href = microsoftOAuthURL;
   };
+
+  // Debug: Add a function to check localStorage
+  const checkLocalStorage = () => {
+    const userData = localStorage.getItem('user');
+    console.log('Current localStorage user data:', userData);
+  };
+
+  useEffect(() => {
+    // Check localStorage when component mounts
+    checkLocalStorage();
+  }, []);
 
   return (
     <Container maxWidth="sm" className="mt-16">

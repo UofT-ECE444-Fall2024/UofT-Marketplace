@@ -104,7 +104,7 @@ def authenticate():
         
         # Prepare user info for session and response
         user_info = {
-            'user_id': str(user.id),  # Convert to string if it's an integer
+            'user_id': str(user.id),
             'username': user.username,
             'name': user.full_name,
             'email': user.email,
@@ -119,13 +119,14 @@ def authenticate():
         # Add a welcome message based on new vs returning user
         welcome_message = "Welcome back!" if not is_new_user else "Welcome! Your account has been created."
         
+        # Change: Always redirect to the root route with the params
         query_params = urlencode({
             'status': 'success',
-            'message': f"{welcome_message}",
+            'message': welcome_message,
             'userData': urlencode(user_info)
         })
         
-        return redirect(f'http://localhost:3000/home?{query_params}')
+        return redirect(f'http://localhost:3000/?{query_params}')  # Changed from /home to /
         
     except Exception as e:
         error_message = 'Authentication error. Please try again.'
