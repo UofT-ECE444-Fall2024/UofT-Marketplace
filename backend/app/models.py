@@ -57,6 +57,8 @@ class Item(db.Model):
 
     # Add a relationship to reference the user (seller)
     seller = db.relationship('User', backref='items')
+    favorited_by = db.relationship('User', secondary='favorites', lazy='dynamic')
+
 
     def to_dict(self):
         return {
@@ -68,6 +70,7 @@ class Item(db.Model):
             'status': self.status,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
+            'favorite_count': len(self.favorites),
             'seller': {
                 'id': self.seller.id,
                 'username': self.seller.username,
@@ -86,3 +89,18 @@ class ItemImage(db.Model):
     image_data = db.Column(db.LargeBinary, nullable=False)
     content_type = db.Column(db.String(100), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Favorite(db.Model):
+    __tablename__ = 'favorites'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    # Add unique constraint to prevent duplicate favorites
+    __table_args__ = (db.UniqueConstraint('user_id', 'item_id'),)
+    
+    # Relationships
+    user = db.relationship('User', backref=db.backref('favorites', lazy=True))
+    item = db.relationship('Item', backref=db.backref('favorites', lazy=True))

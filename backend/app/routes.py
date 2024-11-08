@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.models import db, User, Item, ItemImage
+from app.models import db, User, Item, ItemImage, Favorite
 import base64
 
 bp = Blueprint('main', __name__)
@@ -257,3 +257,97 @@ def debug_profile(username):
         'is_admin': user.is_admin,
         'description': user.description
     })
+
+## Favorites Feature
+@bp.route('/api/favorites/<int:user_id>', methods=['GET'])
+def get_favorites(user_id):
+    try:
+        favorites = Favorite.query.filter_by(user_id=user_id).all()
+        favorite_listings = []
+        
+        for fav in favorites:
+            item_data = fav.item.to_dict()
+            # Add the image if it exists
+            first_image = fav.item.images[0] if fav.item.images else None
+            if first_image:
+                image_b64 = base64.b64encode(first_image.image_data).decode('utf-8')
+                item_data['image'] = f'data:{first_image.content_type};base64,{image_b64}'
+            else:
+                item_data['image'] = None
+                
+            favorite_listings.append(item_data)
+            
+        return jsonify({
+            'status': 'success',
+            'favorites': favorite_listings
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@bp.route('/api/favorites', methods=['POST'])
+def add_favorite():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        item_id = data.get('item_id')
+        
+        # Check if favorite already exists
+        existing_favorite = Favorite.query.filter_by(
+            user_id=user_id,
+            item_id=item_id
+        ).first()
+        
+        if existing_favorite:
+            return jsonify({
+                'status': 'error',
+                'message': 'Already in favorites'
+            }), 409
+            
+        new_favorite = Favorite(user_id=user_id, item_id=item_id)
+        db.session.add(new_favorite)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Added to favorites'
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@bp.route('/api/favorites/<int:user_id>/<int:item_id>', methods=['DELETE'])
+def remove_favorite(user_id, item_id):
+    try:
+        favorite = Favorite.query.filter_by(
+            user_id=user_id,
+            item_id=item_id
+        ).first()
+        
+        if not favorite:
+            return jsonify({
+                'status': 'error',
+                'message': 'Favorite not found'
+            }), 404
+            
+        db.session.delete(favorite)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Removed from favorites'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
