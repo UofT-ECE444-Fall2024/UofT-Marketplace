@@ -1,10 +1,9 @@
-from flask import Blueprint, jsonify, request, redirect, session, url_for
+from flask import Blueprint, jsonify, request, redirect, session
 from app.models import db, User, Item, ItemImage
 import base64
 from stytch import Client as StytchClient
 import os
 from dotenv import load_dotenv  # Add this import
-import requests
 from urllib.parse import urlencode
 import json
 
@@ -28,81 +27,82 @@ def login_with_microsoft():
     )
     return redirect(response['url'])
 
+def create_error_response(message, clear_oauth=False):
+    """Helper function to create error redirect response with optional OAuth clearing"""
+    params = {
+        'status': 'error',
+        'message': message
+    }
+    if clear_oauth:
+        params['clear_oauth'] = 'true'
+    return redirect(f'http://localhost:3000?{urlencode(params)}')
+
+
+def decode_access_token(token):
+    """Decode JWT token and extract payload"""
+    try:
+        token_parts = token.split('.')
+        if len(token_parts) != 3:
+            raise ValueError("Invalid token format")
+        
+        payload = token_parts[1] + '=' * ((4 - len(token_parts[1]) % 4) % 4)
+        return json.loads(base64.b64decode(payload))
+    except Exception:
+        raise ValueError("Invalid token format")
+
+def create_new_user(email, full_name):
+    """Create new user with unique username"""
+    base_username = email.split('@')[0]
+    username = base_username
+    counter = 1
+    
+    while User.query.filter_by(username=username).first():
+        username = f"{base_username}{counter}"
+        counter += 1
+    
+    user = User(
+        username=username,
+        email=email,
+        full_name=full_name,
+        verified=True,
+        description='',
+        is_admin=False
+    )
+    db.session.add(user)
+    db.session.commit()
+    return user
+
 @bp.route('/authenticate')
 def authenticate():
     token = request.args.get('token')
     if not token:
-        error_params = urlencode({
-            'status': 'error',
-            'message': 'Authentication failed - no token provided'
-        })
-        return redirect(f'http://localhost:3000?{error_params}')
+        return create_error_response('Authentication failed - no token provided', clear_oauth=True)
     
     try:
         # Authenticate with Stytch
         response = stytch_client.oauth.authenticate(token)
         
-        # Get access token and extract email
-        access_token = response.provider_values.access_token
-        token_parts = access_token.split('.')
-        if len(token_parts) != 3:
-            raise ValueError("Invalid access token format")
-            
-        payload = token_parts[1]
-        payload += '=' * ((4 - len(payload) % 4) % 4)
-        decoded_payload = base64.b64decode(payload)
-        token_data = json.loads(decoded_payload)
-        
+        # Extract and validate email
+        token_data = decode_access_token(response.provider_values.access_token)
         email = token_data.get('upn') or token_data.get('unique_name')
         
         if not email:
-            error_params = urlencode({
-                'status': 'error',
-                'message': 'Could not retrieve email from Microsoft account'
-            })
-            return redirect(f'http://localhost:3000?{error_params}')
+            return create_error_response('Could not retrieve email from Microsoft account', clear_oauth=True)
         
         # Validate email domain
-        if not email.lower().endswith('@mail.utoronto.ca') and not email.lower().endswith('@utoronto.ca'):
-            error_params = urlencode({
-                'status': 'error',
-                'message': 'Please sign in with your UToronto email address'
-            })
-            return redirect(f'http://localhost:3000?{error_params}')
+        if not any(email.lower().endswith(domain) for domain in ['@mail.utoronto.ca', '@utoronto.ca']):
+            return create_error_response('Please sign in with your UToronto email address', clear_oauth=True)
         
-        # Get user's name from response
-        first_name = response.user.name.first_name
-        last_name = response.user.name.last_name
-        full_name = f"{first_name} {last_name}".strip()
         
-        # Check if user exists in our database
+        # Get or create user
         user = User.query.filter_by(email=email).first()
         is_new_user = user is None
         
         if is_new_user:
-            # Create new user
-            # Generate username from email (everything before @)
-            username = email.split('@')[0]
-            base_username = username
-            counter = 1
-            
-            # Keep trying until we find an available username
-            while User.query.filter_by(username=username).first():
-                username = f"{base_username}{counter}"
-                counter += 1
-            
-            user = User(
-                username=username,
-                email=email,
-                full_name=full_name,
-                verified=True,  # Since they logged in with UToronto email
-                description='',
-                is_admin=False
-            )
-            db.session.add(user)
-            db.session.commit()
+            full_name = f"{response.user.name.first_name} {response.user.name.last_name}".strip()
+            user = create_new_user(email, full_name)
         
-        # Prepare user info for session and response
+        # Prepare user info
         user_info = {
             'user_id': str(user.id),
             'username': user.username,
@@ -113,63 +113,31 @@ def authenticate():
             'description': user.description
         }
         
-        # Store in session
+        # Store in session and prepare response
         session['user'] = user_info
+        welcome_message = "Welcome! Your account has been created." if is_new_user else "Welcome back!"
         
-        # Add a welcome message based on new vs returning user
-        welcome_message = "Welcome back!" if not is_new_user else "Welcome! Your account has been created."
-        
-        # Change: Always redirect to the root route with the params
-        query_params = urlencode({
+        success_params = urlencode({
             'status': 'success',
             'message': welcome_message,
             'userData': urlencode(user_info)
         })
         
-        return redirect(f'http://localhost:3000/?{query_params}')  # Changed from /home to /
+        return redirect(f'http://localhost:3000/?{success_params}')
         
     except Exception as e:
-        error_message = 'Authentication error. Please try again.'
-        if 'oauth_state_used' in str(e):
-            error_message = 'Authentication session expired. Please try logging in again.'
-        elif 'invalid_token' in str(e):
-            error_message = 'Invalid authentication token. Please try logging in again.'
-        elif 'Invalid access token format' in str(e):
-            error_message = 'Could not process Microsoft login. Please try again.'
-            
-        error_params = urlencode({
-            'status': 'error',
-            'message': error_message
-        })
-        
-        return redirect(f'http://localhost:3000?{error_params}')
-
-@bp.route('/api/auth/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    
-    user = User.query.filter_by(username=username).first()
-    
-    if user and user.check_password(password):
-        user_data = {
-            'username': user.username,
-            'full_name': user.full_name,
-            'verified': user.verified,
-            'description': user.description,
-            'is_admin': user.is_admin
+        error_messages = {
+            'oauth_state_used': 'Authentication session expired. Please try logging in again.',
+            'invalid_token': 'Invalid authentication token. Please try logging in again.',
+            'Invalid token format': 'Could not process Microsoft login. Please try again.'
         }
-        return jsonify({
-            'status': 'success',
-            'message': 'Login successful',
-            'user': user_data
-        }), 200
-    else:
-        return jsonify({
-            'status': 'error',
-            'message': 'Invalid username or password'
-        }), 401
+        
+        error_message = error_messages.get(
+            next((key for key in error_messages if key in str(e)), None),
+            'Authentication error. Please try again.'
+        )
+        
+        return create_error_response(error_message, clear_oauth=True)
 
 @bp.route('/api/profile/<username>', methods=['GET'])
 def get_profile(username):
