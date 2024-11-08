@@ -4,24 +4,32 @@ import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, C
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
+import EditListingPopup from '../components/EditListingPopup';
+
 
 function ListingDetail() {
   const { id } = useParams(); // Get the ID from the URL
+
+  // user data
   const [userData, setUserData] = useState(null);
 
+  // listing details
   const [listing, setListing] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [listingLoading, setListingLoading] = useState(true);
+const [profileLoading, setProfileLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // this is for delete and edit buttons
   const [openConfirm, setOpenConfirm] = useState(false);
+  const [isEditOpen, setEditOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState(null); // Holds the listing data to edit
 
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchListingDetail();
     fetchProfile();
-    console.log(listing);
   }, [id]);
 
   const fetchListingDetail = async () => {
@@ -32,10 +40,11 @@ function ListingDetail() {
       }
       const data = await response.json();
       setListing(data.listing); // Assuming the API returns the listing in 'listing' field
+      setSelectedListing(data.listing);
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setListingLoading(false);
     }
   };
 
@@ -57,7 +66,7 @@ function ListingDetail() {
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
   };
 
@@ -104,7 +113,7 @@ function ListingDetail() {
     }
   };
 
-  if (loading) {
+  if (profileLoading || listingLoading) {
     return <CircularProgress />; // Show loading spinner while fetching
   }
 
@@ -169,9 +178,7 @@ function ListingDetail() {
                 zIndex: 10,
                 backgroundColor: 'rgba(0, 0, 0, 0.5)',
                 color: 'white',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                },
+                '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
               }}
             >
               <ArrowBackIosNewIcon />
@@ -187,9 +194,7 @@ function ListingDetail() {
                 zIndex: 10,
                 backgroundColor: 'rgba(0, 0, 0, 0.5)',
                 color: 'white',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                },
+                '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
               }}
             >
               <ArrowForwardIosIcon />
@@ -236,9 +241,7 @@ function ListingDetail() {
                   sx={{
                     backgroundColor: '#007BFF', // Blue color
                     color: 'white',
-                    '&:hover': {
-                      backgroundColor: '#0056b3', // Darker blue for hover
-                    },
+                    '&:hover': { backgroundColor: '#0056b3' },
                     borderRadius: '8px', // Rounded corners
                     padding: '8px 16px', // Padding for a nicer look
                     fontWeight: 'bold', // Bold text
@@ -261,10 +264,18 @@ function ListingDetail() {
                       fontWeight: 'bold',
                       flex: 1
                     }}
-                    onClick={() => navigate(`/edit-listing/${id}`)}
+                    onClick={() => {
+                      setSelectedListing(listing); // listing is the data object for the item to edit
+                      setEditOpen(true);
+                    }}
                   >
                     Edit
                   </Button>
+                  <EditListingPopup open={isEditOpen}
+                      onClose={() => setEditOpen(false)}
+                      onSave={(updatedListing) => {setEditOpen(false);}}
+                      listingData={selectedListing}
+                    />
                   <Button
                     size="small"
                     sx={{
