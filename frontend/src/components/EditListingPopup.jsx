@@ -176,7 +176,7 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
                 <Box 
                     position="relative" 
                     width="100%" 
-                    height={250} 
+                    height={400} 
                     display="flex" 
                     alignItems="center" 
                     justifyContent="center" 
@@ -255,6 +255,7 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
                     fullWidth 
                     value={title} 
                     onChange={(e) => setTitle(e.target.value)} 
+                    sx={{ mb: 2 }}  // Add margin-bottom for spacing
                 />
                 <TextField 
                     label="Price" 
@@ -262,8 +263,13 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
                     value={price} 
                     type="number" 
                     onChange={(e) => setPrice(e.target.value)} 
+                    sx={{ mb: 2 }}  // Add margin-bottom for spacing
                 />
-                <FormControl fullWidth margin="normal" required>
+                <FormControl 
+                    fullWidth 
+                    margin="normal" 
+                    required
+                    sx={{ mb: 2 }}>
                     <InputLabel>Location</InputLabel>
                     <Select value={location} onChange={(e) => setLocation(e.target.value)}>
                         {LOCATIONS.map(loc => <MenuItem key={loc} value={loc}>{loc}</MenuItem>)}
@@ -276,6 +282,7 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
                     rows={4} 
                     value={description} 
                     onChange={(e) => setDescription(e.target.value)} 
+                    sx={{ mb: 2 }}  // Add margin-bottom for spacing
                 />
                 {saveError && (
                     <Typography color="error" variant="body2" sx={{ mt: 1 }}>
