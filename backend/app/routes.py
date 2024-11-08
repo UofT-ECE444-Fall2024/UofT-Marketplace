@@ -6,6 +6,7 @@ import os
 from dotenv import load_dotenv  # Add this import
 import requests
 from urllib.parse import urlencode
+import json
 
 bp = Blueprint('main', __name__)
 load_dotenv()
@@ -27,96 +28,120 @@ def login_with_microsoft():
     )
     return redirect(response['url'])
 
-# Route to handle OAuth callback
 @bp.route('/authenticate')
 def authenticate():
     token = request.args.get('token')
-    if token:
-        try:
-            # Authenticate with Stytch
-            response = stytch_client.oauth.authenticate(token)
-            user = response.user
-            
-            # Extract relevant user info
-            user_info = {
-                'user_id': response.user_id,
-                'name': f"{user.name.first_name} {user.name.last_name}".strip(),
-                'email': user.emails[0] if user.emails else None,
-                'provider_type': user.providers[0].provider_type if user.providers else None,
-                'created_at': user.created_at.isoformat() if user.created_at else None
-            }
-            
-            # Store in session if needed
-            session['user'] = user_info
-            
-            # Construct the redirect URL with user data as query parameters
-            query_params = urlencode({
-                'status': 'success',
-                'message': f"Authenticated! Welcome {user_info['name']}",
-                'userData': urlencode(user_info)  # Encode user data as URL parameters
-            })
-            
-            # Redirect to React frontend with query parameters
-            return redirect(f'http://localhost:3000/home?{query_params}')
-            
-        except Exception as e:
-            print(f"Authentication error: {str(e)}")
-            error_params = urlencode({
-                'status': 'error',
-                'message': str(e)
-            })
-            return redirect(f'http://localhost:3000/auth?{error_params}')
-    else:
+    if not token:
         error_params = urlencode({
             'status': 'error',
             'message': 'Authentication failed - no token provided'
         })
-        return redirect(f'http://localhost:3000/auth?{error_params}')
+        return redirect(f'http://localhost:3000?{error_params}')
     
-@bp.route('/api/auth/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    full_name = data.get('full_name')
-    email = data.get('email')
-
-    if not all([username, password, full_name, email]):
-        return jsonify({
-            'status': 'error',
-            'message': 'All fields are required'
-        }), 400
+    try:
+        # Authenticate with Stytch
+        response = stytch_client.oauth.authenticate(token)
         
-    if User.query.filter_by(username=username).first():
-        return jsonify({
-            'status': 'error',
-            'message': 'Username already exists'
-        }), 409
+        # Get access token and extract email
+        access_token = response.provider_values.access_token
+        token_parts = access_token.split('.')
+        if len(token_parts) != 3:
+            raise ValueError("Invalid access token format")
+            
+        payload = token_parts[1]
+        payload += '=' * ((4 - len(payload) % 4) % 4)
+        decoded_payload = base64.b64decode(payload)
+        token_data = json.loads(decoded_payload)
         
-    new_user = User(
-        username=username,
-        full_name=full_name,
-        email=email,
-        verified=False,
-        description=''
-    )
-    new_user.set_password(password)
-    
-    db.session.add(new_user)
-    db.session.commit()
-    
-    user_data = {
-        'username': username,
-        'full_name': full_name,
-        'verified': False,
-        'description': ''
-    }
-    
-    return jsonify({
-        'status': 'success',
-        'message': 'Registration successful',
-        'user': user_data
-    }), 201
+        email = token_data.get('upn') or token_data.get('unique_name')
+        
+        if not email:
+            error_params = urlencode({
+                'status': 'error',
+                'message': 'Could not retrieve email from Microsoft account'
+            })
+            return redirect(f'http://localhost:3000?{error_params}')
+        
+        # Validate email domain
+        if not email.lower().endswith('@mail.utoronto.ca') and not email.lower().endswith('@utoronto.ca'):
+            error_params = urlencode({
+                'status': 'error',
+                'message': 'Please sign in with your UToronto email address'
+            })
+            return redirect(f'http://localhost:3000?{error_params}')
+        
+        # Get user's name from response
+        first_name = response.user.name.first_name
+        last_name = response.user.name.last_name
+        full_name = f"{first_name} {last_name}".strip()
+        
+        # Check if user exists in our database
+        user = User.query.filter_by(email=email).first()
+        is_new_user = user is None
+        
+        if is_new_user:
+            # Create new user
+            # Generate username from email (everything before @)
+            username = email.split('@')[0]
+            base_username = username
+            counter = 1
+            
+            # Keep trying until we find an available username
+            while User.query.filter_by(username=username).first():
+                username = f"{base_username}{counter}"
+                counter += 1
+            
+            user = User(
+                username=username,
+                email=email,
+                full_name=full_name,
+                verified=True,  # Since they logged in with UToronto email
+                description='',
+                is_admin=False
+            )
+            db.session.add(user)
+            db.session.commit()
+        
+        # Prepare user info for session and response
+        user_info = {
+            'user_id': str(user.id),  # Convert to string if it's an integer
+            'username': user.username,
+            'name': user.full_name,
+            'email': user.email,
+            'verified': user.verified,
+            'is_admin': user.is_admin,
+            'description': user.description
+        }
+        
+        # Store in session
+        session['user'] = user_info
+        
+        # Add a welcome message based on new vs returning user
+        welcome_message = "Welcome back!" if not is_new_user else "Welcome! Your account has been created."
+        
+        query_params = urlencode({
+            'status': 'success',
+            'message': f"{welcome_message}",
+            'userData': urlencode(user_info)
+        })
+        
+        return redirect(f'http://localhost:3000/home?{query_params}')
+        
+    except Exception as e:
+        error_message = 'Authentication error. Please try again.'
+        if 'oauth_state_used' in str(e):
+            error_message = 'Authentication session expired. Please try logging in again.'
+        elif 'invalid_token' in str(e):
+            error_message = 'Invalid authentication token. Please try logging in again.'
+        elif 'Invalid access token format' in str(e):
+            error_message = 'Could not process Microsoft login. Please try again.'
+            
+        error_params = urlencode({
+            'status': 'error',
+            'message': error_message
+        })
+        
+        return redirect(f'http://localhost:3000?{error_params}')
 
 @bp.route('/api/auth/login', methods=['POST'])
 def login():
