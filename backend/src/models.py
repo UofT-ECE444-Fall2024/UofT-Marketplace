@@ -24,6 +24,18 @@ class User(db.Model):
         if not self.password_hash:  # Handle OAuth users who don't have a password
             return False
         return check_password_hash(self.password_hash, password)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'password_hash': self.password_hash,
+            'full_name': self.full_name,
+            'email': self.email,
+            'verified': self.verified,
+            'description': self.description,
+            'is_admin': self.is_admin
+        }
     
 """
 1. Items Table: This table stores information about items listed for sale.

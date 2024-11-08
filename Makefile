@@ -4,7 +4,7 @@ PYTHON=python3
 PIP=pip3
 VENV_DIR=$(BACKEND_DIR)/venv
 VENV_ACTIVATE=$(VENV_DIR)/bin/activate
-FLASK_APP=$(BACKEND_DIR)/app:create_app 
+FLASK_APP=$(BACKEND_DIR)/src:create_app 
 DOCKER_COMPOSE_FILE=docker-compose.yml
 
 .PHONY: frontend-install backend-install start frontend-start tailwind-watch backend-start clean docker-up docker-down venv create-venv
