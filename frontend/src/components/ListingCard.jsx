@@ -13,11 +13,11 @@ function ListingCard({ image, title, location, price, id, isFavorite, onFavorite
 
   const handleFavoriteClick = useCallback(
     async (e) => {
+      // console.log("TheIds ", userId, id, 2);
       userId = 1;
       e.stopPropagation();
       const newFavoriteStatus = !favoriteStatus;
       setFavoriteStatus(newFavoriteStatus);
-      // console.log("TheIds ", 1, id);
       try {
         if (newFavoriteStatus) {
           // Send POST request to add favorite
