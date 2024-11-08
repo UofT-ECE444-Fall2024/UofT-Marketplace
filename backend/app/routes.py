@@ -212,15 +212,22 @@ def get_listing(id):
             'message': str(e)
         }), 500  # Return a server error status if something goes wrong
     
-@bp.route('/api/listings/<int:id>/delete', methods=['POST'])
+@bp.route('/api/listings/<int:id>', methods=['DELETE'])
 def delete_listing(id):
-    # Ensure the current user is the seller of the listing
+    # Retrieve the specific item by ID
     item = Item.query.get(id)
-    if item and item.user_id == current_user.id:
-        db.session.delete(item)
-        db.session.commit()
-        return jsonify({"status": "success", "message": "Listing deleted successfully"}), 200
-    return jsonify({"status": "error", "message": "Unauthorized or listing not found"}), 404
+
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({
+        "status": "success", 
+        "message": "Listing deleted successfully"
+    }), 200
+
+    return jsonify({
+        "status": "error", 
+        "message": "Unauthorized or listing not found"
+    }), 404
 
 ####################################DEBUGGING############################
 @bp.route('/api/debug/users', methods=['GET'])

@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, CardContent, Typography, Box, CircularProgress, CardActions, Button, IconButton} from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Card, CardContent, Typography, Box, CircularProgress, CardActions, Button, IconButton} from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
 
 function ListingDetail() {
   const { id } = useParams(); // Get the ID from the URL
+  const [userData, setUserData] = useState(null);
+
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [userData, setUserData] = useState(null);
+
+  const [openConfirm, setOpenConfirm] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -57,6 +61,20 @@ function ListingDetail() {
     }
   };
 
+  const handleOpenConfirm = () => {
+    setOpenConfirm(true);
+  };
+
+  const handleCloseConfirm = () => {
+    setOpenConfirm(false);
+  };
+
+  const handleConfirmDelete = () => {
+    handleCloseConfirm();
+    // Proceed with delete and redirect
+    handleDelete();
+  };
+
   const handleDelete = async () => {
     try {
       const response = await fetch(`http://localhost:5001/api/listings/${id}`, { method: 'DELETE' });
@@ -66,7 +84,7 @@ function ListingDetail() {
       else {
         throw new Error('Failed to delete listing');
       }
-      navigate('/'); // Redirect to homepage after successful deletion
+      navigate('/home'); // Redirect to homepage after successful deletion
     } catch (err) {
       setError(err.message);
     }
@@ -259,12 +277,33 @@ function ListingDetail() {
                       flex: 1
                     }}
                     color="error"
-                    onClick={handleDelete}
+                    onClick={handleOpenConfirm}
                   >
                     Delete
                   </Button>
                 </Box>
               )}
+
+              {/* Confirmation Dialog */}
+              <Dialog
+                open={openConfirm}
+                onClose={handleCloseConfirm}
+              >
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                  <DialogContentText>
+                    Are you sure you want to delete this listing? This action cannot be undone.
+                  </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleCloseConfirm} color="primary">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleConfirmDelete} color="error">
+                    Confirm
+                  </Button>
+                </DialogActions>
+              </Dialog>
 
             </CardActions>
           </CardContent>
