@@ -1,83 +1,143 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, redirect, session
 from src.models import db, User, Item, ItemImage
-from src.search_algorithm import search_algorithm
-from sqlalchemy import and_
-from datetime import datetime, timedelta
 import base64
+from stytch import Client as StytchClient
+import os
+from dotenv import load_dotenv  # Add this import
+from urllib.parse import urlencode
+import json
 
 bp = Blueprint('main', __name__)
+load_dotenv()
 
-@bp.route('/api/auth/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    full_name = data.get('full_name')
-    email = data.get('email')
+# Initialize Stytch client with your credentials
+stytch_client = StytchClient(
+  project_id=os.environ['STYTCH_PROJECT_ID'],
+  secret=os.environ['STYTCH_SECRET'],
+  environment="test"
+)
 
-    if not all([username, password, full_name, email]):
-        return jsonify({
-            'status': 'error',
-            'message': 'All fields are required'
-        }), 400
-        
-    if User.query.filter_by(username=username).first():
-        return jsonify({
-            'status': 'error',
-            'message': 'Username already exists'
-        }), 409
-        
-    new_user = User(
-        username=username,
-        full_name=full_name,
-        email=email,
-        verified=False,
-        description=''
+# Route to start Microsoft OAuth login
+@bp.route('/login')
+def login_with_microsoft():
+    response = stytch_client.oauth.microsoft.start(
+        login_redirect_url='http://localhost:5001/authenticate',
+        signup_redirect_url='http://localhost:5001/authenticate',
+        custom_scopes=["User.Read"]
     )
-    new_user.set_password(password)
-    
-    db.session.add(new_user)
-    db.session.commit()
-    
-    user_data = {
-        'username': username,
-        'full_name': full_name,
-        'verified': False,
-        'description': ''
-    }
-    
-    return jsonify({
-        'status': 'success',
-        'message': 'Registration successful',
-        'user': user_data
-    }), 201
+    return redirect(response['url'])
 
-@bp.route('/api/auth/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
+def create_error_response(message, clear_oauth=False):
+    """Helper function to create error redirect response with optional OAuth clearing"""
+    params = {
+        'status': 'error',
+        'message': message
+    }
+    if clear_oauth:
+        params['clear_oauth'] = 'true'
+    return redirect(f'http://localhost:3000?{urlencode(params)}')
+
+
+def decode_access_token(token):
+    """Decode JWT token and extract payload"""
+    try:
+        token_parts = token.split('.')
+        if len(token_parts) != 3:
+            raise ValueError("Invalid token format")
+        
+        payload = token_parts[1] + '=' * ((4 - len(token_parts[1]) % 4) % 4)
+        return json.loads(base64.b64decode(payload))
+    except Exception:
+        raise ValueError("Invalid token format")
+
+def create_new_user(email, full_name):
+    """Create new user with unique username"""
+    base_username = email.split('@')[0]
+    username = base_username
+    counter = 1
     
-    user = User.query.filter_by(username=username).first()
+    while User.query.filter_by(username=username).first():
+        username = f"{base_username}{counter}"
+        counter += 1
     
-    if user and user.check_password(password):
-        user_data = {
+    user = User(
+        username=username,
+        email=email,
+        full_name=full_name,
+        verified=True,
+        description='',
+        is_admin=False
+    )
+    db.session.add(user)
+    db.session.commit()
+    return user
+
+@bp.route('/authenticate')
+def authenticate():
+    token = request.args.get('token')
+    if not token:
+        return create_error_response('Authentication failed - no token provided', clear_oauth=True)
+    
+    try:
+        # Authenticate with Stytch
+        response = stytch_client.oauth.authenticate(token)
+        
+        # Extract and validate email
+        token_data = decode_access_token(response.provider_values.access_token)
+        email = token_data.get('upn') or token_data.get('unique_name')
+        
+        if not email:
+            return create_error_response('Could not retrieve email from Microsoft account', clear_oauth=True)
+        
+        # Validate email domain
+        if not any(email.lower().endswith(domain) for domain in ['@mail.utoronto.ca', '@utoronto.ca']):
+            return create_error_response('Please sign in with your UToronto email address', clear_oauth=True)
+        
+        
+        # Get or create user
+        user = User.query.filter_by(email=email).first()
+        is_new_user = user is None
+        
+        if is_new_user:
+            full_name = f"{response.user.name.first_name} {response.user.name.last_name}".strip()
+            user = create_new_user(email, full_name)
+        
+        # Prepare user info
+        user_info = {
+            'user_id': str(user.id),
             'username': user.username,
-            'full_name': user.full_name,
+            'name': user.full_name,
+            'email': user.email,
             'verified': user.verified,
-            'description': user.description,
-            'is_admin': user.is_admin
+            'is_admin': user.is_admin,
+            'description': user.description
         }
-        return jsonify({
+        
+        # Store in session and prepare response
+        session['user'] = user_info
+        welcome_message = "Welcome! Your account has been created." if is_new_user else "Welcome back!"
+        
+        success_params = urlencode({
             'status': 'success',
-            'message': 'Login successful',
-            'user': user_data
-        }), 200
-    else:
-        return jsonify({
-            'status': 'error',
-            'message': 'Invalid username or password'
-        }), 401
+            'message': welcome_message,
+            'userData': urlencode(user_info)
+        })
+        
+        return redirect(f'http://localhost:3000/?{success_params}')
+        
+    except Exception as e:
+        error_messages = {
+            'oauth_state_used': 'Authentication session expired. Please try logging in again.',
+            'invalid_token': 'Invalid authentication token. Please try logging in again.',
+            'Invalid token format': 'Could not process Microsoft login. Please try again.'
+        }
+        
+        error_message = error_messages.get(
+            next((key for key in error_messages if key in str(e)), None),
+            'Authentication error. Please try again.'
+        )
+        
+        return create_error_response(error_message, clear_oauth=True)
 
 @bp.route('/api/profile/<username>', methods=['GET'])
 def get_profile(username):
