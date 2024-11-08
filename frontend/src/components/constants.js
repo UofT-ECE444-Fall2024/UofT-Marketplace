@@ -1,3 +1,5 @@
+import { ShoppingBag, Home, Devices, Movie, HealthAndSafety, SportsMotorsports, Category } from '@mui/icons-material';
+
 export const LOCATIONS = [
     'Bahen',
     'University College',
@@ -35,3 +37,34 @@ export const DATE_LISTED = [
     'Last 7 Days',
     'Last 30 Days'
 ]
+
+export const CATEGORIES = new Map([
+    ['Clothing & Accessories', {
+      icon: <ShoppingBag />,
+      subcategories: ['Accessories', 'Menswear', 'Womenswear', 'Baby & Kids', 'Shoes']
+    }],
+    ['Home & Living', {
+      icon: <Home />,
+      subcategories: ['Furniture', 'Home Decor', 'Appliances', 'Tools & Hardware']
+    }],
+    ['Electronics', {
+      icon: <Devices />,
+      subcategories: ['Computers & Tablets', 'Phones & Accessories']
+    }],
+    ['Entertainment', {
+      icon: <Movie />,
+      subcategories: ['Books, Movies & Music', 'Games & Puzzles']
+    }],
+    ['Health & Beauty', {
+      icon: <HealthAndSafety />,
+      subcategories: ['Skincare & Makeup', 'Haircare & Beauty Tools', 'Health & Wellness']
+    }],
+    ['Outdoors & Sports', {
+      icon: <SportsMotorsports />,
+      subcategories: ['Bicycles & Vehicles', 'Sports & Gear']
+    }],
+    ['Miscellaneous', {
+      icon: <Category />,
+      subcategories: ['Vintage & Collectibles', 'Arts & Crafts', 'Other']
+    }]
+  ]);

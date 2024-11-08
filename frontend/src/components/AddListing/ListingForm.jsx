@@ -1,9 +1,8 @@
 import React from 'react';
 import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
 import CategoryDropdown from './CategoryDropdown';
+import { LOCATIONS, CONDITIONS } from '../constants.js';
 
-const LOCATIONS = ['Bahen', 'University College', 'Hart House', 'Sid Smith', 'Myhal', 'Robarts'];
-const CONDITIONS = ['New', 'Used - Like New', 'Used - Good', 'Used - Fair'];
 
 function ListingForm({ title, setTitle, price, setPrice, location, setLocation, condition, setCondition, description, setDescription, category, setCategory, publishError }) {
   return (

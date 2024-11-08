@@ -1,37 +1,6 @@
 import React from 'react';
 import { FormControl, InputLabel, Select, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
-import { ShoppingBag, Home, Devices, Movie, HealthAndSafety, SportsMotorsports, Category } from '@mui/icons-material';
-
-const CATEGORIES = new Map([
-  ['Clothing & Accessories', {
-    icon: <ShoppingBag />,
-    subcategories: ['Accessories', 'Menswear', 'Womenswear', 'Baby & Kids', 'Shoes']
-  }],
-  ['Home & Living', {
-    icon: <Home />,
-    subcategories: ['Furniture', 'Home Decor', 'Appliances', 'Tools & Hardware']
-  }],
-  ['Electronics', {
-    icon: <Devices />,
-    subcategories: ['Computers & Tablets', 'Phones & Accessories']
-  }],
-  ['Entertainment', {
-    icon: <Movie />,
-    subcategories: ['Books, Movies & Music', 'Games & Puzzles']
-  }],
-  ['Health & Beauty', {
-    icon: <HealthAndSafety />,
-    subcategories: ['Skincare & Makeup', 'Haircare & Beauty Tools', 'Health & Wellness']
-  }],
-  ['Outdoors & Sports', {
-    icon: <SportsMotorsports />,
-    subcategories: ['Bicycles & Vehicles', 'Sports & Gear']
-  }],
-  ['Miscellaneous', {
-    icon: <Category />,
-    subcategories: ['Vintage & Collectibles', 'Arts & Crafts', 'Other']
-  }]
-]);
+import { CATEGORIES } from '../constants.js';
 
 function CategoryDropdown({ category, setCategory }) {
   const menuItems = Array.from(CATEGORIES.entries()).reduce((items, [categoryName, { icon, subcategories }]) => {
@@ -52,7 +21,7 @@ function CategoryDropdown({ category, setCategory }) {
         <MenuItem 
           key={`${categoryName}-${subcategory}`}
           value={subcategory}
-          sx={{ pl: 7, color: 'text.primary' }}
+          sx={{ pl: 6.5, color: 'text.primary' }}
         >
           <ListItemText>{subcategory}</ListItemText>
         </MenuItem>
