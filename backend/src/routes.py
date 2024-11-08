@@ -1,5 +1,8 @@
 from flask import Blueprint, jsonify, request
 from src.models import db, User, Item, ItemImage
+from src.search_algorithm import search_algorithm
+from sqlalchemy import and_
+from datetime import datetime, timedelta
 import base64
 
 bp = Blueprint('main', __name__)
@@ -145,8 +148,62 @@ def create_listing():
 
 @bp.route('/api/listings', methods=['GET'])
 def get_listings():
+    search_query = request.args.get("search")
+    condition_query = request.args.get("condition")
+    location_query = request.args.get("location")
+    date_listed_query = request.args.get("daysSinceListed")
+    min_price_query = request.args.get("minPrice")
+    max_price_query = request.args.get("maxPrice")
+    sort_by_query = request.args.get("sortBy")
+
     try:
-        items = Item.query.order_by(Item.created_at.desc()).all()
+        # Initialize the base query
+        query = Item.query
+
+        # Add filters based on the presence of query parameters
+        filters = []
+
+        if condition_query:
+            # Split the comma-separated string into a list and filter using `in_`
+            conditions = condition_query.split(',')
+            # filters.append(Item.condition.in_(conditions))
+
+        if location_query:
+            # Split the comma-separated string into a list and filter using `in_`
+            locations = location_query.split(',')
+            filters.append(Item.location.in_(locations))
+
+        if date_listed_query:
+            # Calculate date threshold based on days since listed
+            days_threshold = datetime.now() - timedelta(days=int(date_listed_query))
+            filters.append(Item.created_at >= days_threshold)
+
+        if min_price_query:
+            filters.append(Item.price >= float(min_price_query))
+
+        if max_price_query:
+            filters.append(Item.price <= float(max_price_query))
+
+        # Apply all collected filters at once using `.filter(*filters)`
+        if filters:
+            query = query.filter(and_(*filters))
+
+        # Apply sorting based on `sort_by_query`, defaulting to created_at desc if not specified
+        if sort_by_query == 'price_asc':
+            query = query.order_by(Item.price.asc())
+        elif sort_by_query == 'price_desc':
+            query = query.order_by(Item.price.desc())
+        elif sort_by_query == 'date_asc':
+            query = query.order_by(Item.created_at.asc())
+        else:
+            query = query.order_by(Item.created_at.desc())
+        
+        items = query.all()
+
+        # Only perform search if search query is in the URL
+        if search_query:
+            items = search_algorithm(items, search_query)
+
         listings = []
         
         for item in items:
