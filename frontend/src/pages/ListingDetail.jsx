@@ -180,7 +180,7 @@ function ListingDetail() {
 
           <CardContent sx={{ width: '30%' }}>
             <Typography variant="h5" component="div" fontWeight="bold" align='left'>
-              {listing.title}
+              {listing.title} {listing.user_id}
             </Typography>
             <Typography variant="body2" color="text.secondary" align='left'>
               {listing.location}
@@ -194,13 +194,13 @@ function ListingDetail() {
 
             <hr style={{ margin: '16px 0', border: '1px solid #ccc' }} />
 
-            <Typography variant="h6" component="div" fontWeight="bold" align="left" sx={{ marginBottom: '8px' }}>
+            <Typography variant="h7" component="div" fontWeight="bold" align="left" sx={{ marginBottom: '8px' }}>
               Seller Information:
             </Typography>
 
             <Box sx={{ marginBottom: '16px' }}>
               <Typography variant="body1" color="text.primary" align="left" sx={{ fontWeight: 'bold' }}>
-                Name: {listing.seller.full_name}
+                {listing.seller.full_name}
               </Typography>
               <Typography variant="body2" color="text.secondary" align="left">
                 Description: {listing.seller.description || 'No description available'}
@@ -210,8 +210,9 @@ function ListingDetail() {
               </Typography>
             </Box>
 
-            <CardActions>
+            <CardActions sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
               {/* TO DO: connect this button to the chat function to contact seller! */}
+              {userData.username !== listing.seller.username && (
               <Button
                   size="small"
                   sx={{
@@ -227,47 +228,44 @@ function ListingDetail() {
                 >           
                 Contact Seller
               </Button>
-
-              {userData.username !== listing.seller.username && (
-                <Box sx={{ mt: 2 }}>
-                <Button
-                  size="small"
-                  sx={{
-                    backgroundColor: '#007BFF',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: '#0056b3',
-                    },
-                    borderRadius: '8px',
-                    padding: '8px 16px',
-                    fontWeight: 'bold',
-                    width: '90%', // Make both buttons full width
-                  }}
-                  onClick={() => navigate(`/edit-listing/${id}`)}
-                >
-                  Edit Listing
-                </Button>
-                <Button
-                  size="small"
-                  sx={{
-                    backgroundColor: 'red',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: '#d40000', // Darker red for hover
-                    },
-                    borderRadius: '8px',
-                    padding: '8px 16px',
-                    fontWeight: 'bold',
-                    width: '90%', // Make both buttons full width
-                  }}
-                  color="error"
-                  onClick={handleDelete}
-                >
-                  Delete Listing
-                </Button>
-              </Box>
-              
               )}
+              
+              {userData.username === listing.seller.username  && (
+                <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center', alignItems: 'center'}}>
+                  <Button
+                    size="small"
+                    sx={{
+                      backgroundColor: '#007BFF',
+                      color: 'white',
+                      '&:hover': { backgroundColor: '#0056b3' },
+                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      fontWeight: 'bold',
+                      flex: 1
+                    }}
+                    onClick={() => navigate(`/edit-listing/${id}`)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size="small"
+                    sx={{
+                      backgroundColor: 'red',
+                      color: 'white',
+                      '&:hover': { backgroundColor: '#d40000' },
+                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      fontWeight: 'bold',
+                      flex: 1
+                    }}
+                    color="error"
+                    onClick={handleDelete}
+                  >
+                    Delete
+                  </Button>
+                </Box>
+              )}
+
             </CardActions>
           </CardContent>
         </Box>

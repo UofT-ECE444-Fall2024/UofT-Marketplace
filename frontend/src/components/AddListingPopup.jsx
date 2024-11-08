@@ -88,13 +88,28 @@ function AddListingPopup({ open, onClose, onPublish }) {
     setLoading(true);
 
     try {
+      // Fetch the logged-in user's profile
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      if (!storedUser?.username) {
+        throw new Error('Not logged in');
+      }
+
+      const userresponse = await fetch(`http://localhost:5001/api/profile/${storedUser.username}`);
+      const userdata = await userresponse.json();
+      if (!userresponse.ok) {
+        throw new Error(userdata.message);
+      }
+
+      // Use the logged-in user's ID for the listing
+      const user_id = userdata.user.id;
+
       const response = await fetch('http://localhost:5001/api/listings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: 1, // Replace with actual user ID from auth
+          user_id: user_id, // Replace with actual user ID from auth
           title,
           price,
           location,

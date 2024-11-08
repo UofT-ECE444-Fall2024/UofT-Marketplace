@@ -87,14 +87,7 @@ def get_profile(username):
             'message': 'User not found'
         }), 404
         
-    user_data = {
-        'username': user.username,
-        'full_name': user.full_name,
-        'verified': user.verified,
-        'description': user.description,
-        'is_admin': user.is_admin,
-        'email': user.email  # Include email if needed
-    }
+    user_data = user.to_dict()
     
     return jsonify({
         'status': 'success',
@@ -109,10 +102,10 @@ def home():
 def create_listing():
     try:
         data = request.json
-        
+
         # Create new item
         new_item = Item(
-            user_id=data['user_id'],
+            user_id=int(data['user_id']),
             title=data['title'],
             description=data['description'],
             price=float(data['price'].replace('$', '')),
@@ -147,7 +140,7 @@ def create_listing():
         db.session.rollback()
         return jsonify({
             'status': 'error',
-            'message': str(e)
+            'message': error
         }), 500
 
 @bp.route('/api/listings', methods=['GET'])
