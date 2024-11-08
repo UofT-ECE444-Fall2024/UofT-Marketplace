@@ -1,28 +1,28 @@
 import React, { useState } from 'react';
 import RadioSelect from '../RadioSelect';
-import { DATE_LISTED } from '../constants.js';
+import { SORT_OPTIONS, SORT_OPTIONS_MAPPING } from '../constants.js';
 
-const DateListedFilter = ({queries, setQueries, searchAndFilterNavigate}) => {
+const SortByFilter = ({queries, setQueries, searchAndFilterNavigate}) => {
     const handleChange = (event) => {
         if (!event.target.value) return;
         const queriesCpy = {...queries}
-        if (event.target.value === "All") {
-            if ('daysSinceListed' in queriesCpy) {
+        if (event.target.value === "Suggested") {
+            if ('sortBy' in queriesCpy) {
                 delete queriesCpy.daysSinceListed;
                 setQueries(queriesCpy);
             }
             return;
         }
-        queriesCpy['daysSinceListed'] = event.target.value.split(" ")[1];
+        queriesCpy['sortBy'] = SORT_OPTIONS_MAPPING[event.target.value];
         setQueries(queriesCpy);
         searchAndFilterNavigate(queriesCpy);
     };
 
     return (
         <div>
-            <RadioSelect filterLabel="Date Listed" values={DATE_LISTED} handleChange={handleChange} />
+            <RadioSelect filterLabel="Sort By" values={SORT_OPTIONS} handleChange={handleChange} />
         </div>
     )
 }
 
-export default DateListedFilter;
+export default SortByFilter;

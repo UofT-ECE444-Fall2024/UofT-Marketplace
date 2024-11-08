@@ -4,12 +4,13 @@ import PriceFilter from './filters/PriceFilter';
 import ConditionFilter from './filters/ConditionFilter';
 import DateListedFilter from './filters/DateListedFilter';
 import LocationFilter from './filters/LocationFilter';
+import SortByFilter from './filters/SortByFilter'
 import Drawer from '@mui/material/Drawer';
 import Toolbar from '@mui/material/Toolbar';
 
-const drawerWidth = 300;
+const drawerWidth = 360;
 
-const SearchAndFilter = ({handleSearchChange, handleSearchClickSubmit, handleSearchEnterSubmit}) => {
+const SearchAndFilter = ({queries, setQueries, searchAndFilterNavigate}) => {
     return (
         <Drawer
             variant="permanent"
@@ -20,11 +21,12 @@ const SearchAndFilter = ({handleSearchChange, handleSearchClickSubmit, handleSea
             }}
         >
             <Toolbar />
-            <SearchBar handleSearchChange={handleSearchChange} handleSearchClickSubmit={handleSearchClickSubmit} handleSearchEnterSubmit={handleSearchEnterSubmit} />
-            <PriceFilter />
-            <ConditionFilter />
-            <DateListedFilter />
-            <LocationFilter />
+            <SearchBar queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
+            <PriceFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
+            <ConditionFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
+            <LocationFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
+            <SortByFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
+            <DateListedFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
         </Drawer>
     )
 
