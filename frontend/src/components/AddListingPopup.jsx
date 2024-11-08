@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogActions, Button, IconButton, Grid, CircularProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import { LOCATIONS } from './constants.js';
 import ImageCarousel from './AddListing/ImageCarousel';
 import ListingForm from './AddListing/ListingForm';
 
@@ -19,16 +17,6 @@ function AddListingPopup({ open, onClose, onPublish }) {
   const [loading, setLoading] = useState(false);
   const [imageError, setImageError] = useState('');
   const [publishError, setPublishError] = useState('');
-
-  // Convert File objects to base64 strings
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = (error) => reject(error);
-    });
-  };
 
   // Handle the publishing of the listing
   const handlePublish = async () => {
@@ -95,7 +83,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
         setPublishError(data.message || 'Error creating listing');
       }
     } catch (error) {
-      setPublishError('Network error. Please try again.');
+      setPublishError(error.message);
     } finally {
       setLoading(false);
     }
