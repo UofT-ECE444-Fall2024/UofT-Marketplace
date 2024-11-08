@@ -86,7 +86,7 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
             setImageError(err.message);
         }
     };
-    
+
 
     const handlePreviousImage = () => {
         setCurrentImageIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
@@ -111,6 +111,8 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
         setLoading(true);
 
         try {
+            const updatedImages = images.length > listingData.images.length ? images.slice(listingData.images.length) : [];
+
             const response = await fetch(`http://localhost:5001/api/listings/${listingData.id}`, {
                 method: 'PUT',
                 headers: {
@@ -121,7 +123,7 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
                     price,
                     location,
                     description,
-                    images
+                    images: updatedImages
                 })
             });
             const data = await response.json();
