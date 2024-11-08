@@ -32,7 +32,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
   const handlePublish = async () => {
     setPublishError('');
     // Validate required fields
-    if (!title || !price || !location || !condition || images.length === 0) {
+    if (!title || !price || !location || !condition || !category || images.length === 0) {
       setPublishError('Please fill in all required fields and add at least one image.');
       return;
     }
@@ -52,6 +52,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
           price,
           location,
           condition,
+          category,
           description,
           images
         })
@@ -70,6 +71,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
         setPrice('');
         setLocation('');
         setCondition('');
+        setCategory('');
         setDescription('');
         onClose();
       } else {
@@ -110,6 +112,8 @@ function AddListingPopup({ open, onClose, onPublish }) {
             description={description}
             setDescription={setDescription}
             publishError={publishError}
+            category={category}
+            setCategory={setCategory}
           />
         </Grid>
       </DialogContent>

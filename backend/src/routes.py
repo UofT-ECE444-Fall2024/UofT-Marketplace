@@ -110,7 +110,6 @@ def home():
 def create_listing():
     try:
         data = request.json
-        
         # Create new item
         new_item = Item(
             user_id=data['user_id'],
@@ -118,7 +117,8 @@ def create_listing():
             description=data['description'],
             price=float(data['price'].replace('$', '')),
             location=data['location'],
-            condition=data['condition']
+            condition=data['condition'],
+            category=data['category']
         )
         db.session.add(new_item)
         

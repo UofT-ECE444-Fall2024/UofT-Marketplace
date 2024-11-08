@@ -1,10 +1,11 @@
 import React from 'react';
 import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
+import CategoryDropdown from './CategoryDropdown';
 
 const LOCATIONS = ['Bahen', 'University College', 'Hart House', 'Sid Smith', 'Myhal', 'Robarts'];
 const CONDITIONS = ['New', 'Used - Like New', 'Used - Good', 'Used - Fair'];
 
-function ListingForm({ title, setTitle, price, setPrice, location, setLocation, condition, setCondition, description, setDescription, publishError }) {
+function ListingForm({ title, setTitle, price, setPrice, location, setLocation, condition, setCondition, description, setDescription, category, setCategory, publishError }) {
   return (
     <Grid item xs={12} sm={6}>
       <TextField label="Title" required fullWidth margin="normal" value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -21,6 +22,10 @@ function ListingForm({ title, setTitle, price, setPrice, location, setLocation, 
           {CONDITIONS.map(con => <MenuItem key={con} value={con}>{con}</MenuItem>)}
         </Select>
       </FormControl>
+      <CategoryDropdown 
+        category={category} 
+        setCategory={setCategory}
+      />
       <TextField label="Description" multiline rows={4} fullWidth margin="normal" value={description} onChange={(e) => setDescription(e.target.value)} />
       {publishError && <Typography color="error" variant="body2" sx={{ mt: 1 }}>{publishError}</Typography>}
     </Grid>
