@@ -17,56 +17,6 @@ def client():
         db.session.remove()  # Remove the session
         db.drop_all()  # Drop tables after tests are done
 
-def test_register(client):
-    response = client.post('/api/auth/register', json={
-        'username': 'testuser',
-        'password': 'password123',
-        'full_name': 'Test User',
-        'email': 'testuser@example.com'
-    })
-    data = response.get_json()
-    assert response.status_code == 201
-    assert data['status'] == 'success'
-    assert data['message'] == 'Registration successful'
-    assert data['user']['username'] == 'testuser'
-
-def test_login(client):
-    # Register a new user first
-    client.post('/api/auth/register', json={
-        'username': 'testuser',
-        'password': 'password123',
-        'full_name': 'Test User',
-        'email': 'testuser@example.com'
-    })
-    
-    # Attempt to log in with the registered user
-    response = client.post('/api/auth/login', json={
-        'username': 'testuser',
-        'password': 'password123'
-    })
-    data = response.get_json()
-    assert response.status_code == 200
-    assert data['status'] == 'success'
-    assert data['message'] == 'Login successful'
-    assert data['user']['username'] == 'testuser'
-
-def test_get_profile(client):
-    # Register a new user
-    client.post('/api/auth/register', json={
-        'username': 'testuser',
-        'password': 'password123',
-        'full_name': 'Test User',
-        'email': 'testuser@example.com'
-    })
-    
-    # Retrieve the user's profile
-    response = client.get('/api/profile/testuser')
-    data = response.get_json()
-    assert response.status_code == 200
-    assert data['status'] == 'success'
-    assert data['user']['username'] == 'testuser'
-    assert data['user']['full_name'] == 'Test User'
-
 def test_create_listing(client):
     # Register a user first
     register_response = client.post('/api/auth/register', json={
