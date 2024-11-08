@@ -5,6 +5,7 @@ from stytch import Client as StytchClient
 import os
 from dotenv import load_dotenv  # Add this import
 import requests
+from urllib.parse import urlencode
 
 bp = Blueprint('main', __name__)
 load_dotenv()
@@ -34,7 +35,7 @@ def authenticate():
         try:
             # Authenticate with Stytch
             response = stytch_client.oauth.authenticate(token)
-            user = response.user  # This is a User object, not a dict
+            user = response.user
             
             # Extract relevant user info
             user_info = {
@@ -48,25 +49,30 @@ def authenticate():
             # Store in session if needed
             session['user'] = user_info
             
-            # Return JSON response
-            return jsonify({
+            # Construct the redirect URL with user data as query parameters
+            query_params = urlencode({
                 'status': 'success',
                 'message': f"Authenticated! Welcome {user_info['name']}",
-                'user': user_info
-            }), 200
+                'userData': urlencode(user_info)  # Encode user data as URL parameters
+            })
+            
+            # Redirect to React frontend with query parameters
+            return redirect(f'http://localhost:3000/home?{query_params}')
             
         except Exception as e:
-            print(f"Authentication error: {str(e)}")  # Add this for debugging
-            return jsonify({
+            print(f"Authentication error: {str(e)}")
+            error_params = urlencode({
                 'status': 'error',
                 'message': str(e)
-            }), 400
+            })
+            return redirect(f'http://localhost:3000/auth?{error_params}')
     else:
-        return jsonify({
+        error_params = urlencode({
             'status': 'error',
             'message': 'Authentication failed - no token provided'
-        }), 400
-
+        })
+        return redirect(f'http://localhost:3000/auth?{error_params}')
+    
 @bp.route('/api/auth/register', methods=['POST'])
 def register():
     data = request.get_json()
