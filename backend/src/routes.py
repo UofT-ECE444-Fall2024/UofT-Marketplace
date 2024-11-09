@@ -480,9 +480,7 @@ def debug_profile(username):
         'email': user.email,
         'verified': user.verified,
         'is_admin': user.is_admin,
-        'description': user.description,
-        'rating': user.rating,
-        'rating_count': user.rating_count
+        'description': user.description
     })
 
 ## Favorites Feature
