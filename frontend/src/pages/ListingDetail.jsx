@@ -1,37 +1,103 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Card, CardContent, Typography, Box, CircularProgress, CardActions, Button, IconButton} from '@mui/material';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Card, CardContent, Typography, Box, CircularProgress, CardActions, Button, IconButton} from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+
+import EditListingPopup from '../components/EditListingPopup';
 
 
 function ListingDetail() {
   const { id } = useParams(); // Get the ID from the URL
+
+  // user data
+  const [userData, setUserData] = useState(null);
+
+  // listing details
   const [listing, setListing] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [listingLoading, setListingLoading] = useState(true);
+const [profileLoading, setProfileLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  // this is for delete and edit buttons
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [isEditOpen, setEditOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState(null); // Holds the listing data to edit
+
+  const navigate = useNavigate();
+
   useEffect(() => {
-    console.log('Listing ID:', id); 
-    const fetchListingDetail = async () => {
-      try {
-        const response = await fetch(`http://localhost:5001/api/listings/${id}`); // Fetch details for the specific listing
-        if (!response.ok) {
-          throw new Error('Failed to fetch listing details');
-        }
-        const data = await response.json();
-        setListing(data.listing); // Assuming the API returns the listing in 'listing' field
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchListingDetail();
-
+    fetchProfile();
   }, [id]);
+
+  const fetchListingDetail = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/listings/${id}`); // Fetch details for the specific listing
+      if (!response.ok) {
+        throw new Error('Failed to fetch listing details');
+      }
+      const data = await response.json();
+      setListing(data.listing); // Assuming the API returns the listing in 'listing' field
+      setSelectedListing(data.listing);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setListingLoading(false);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('user'));
+      if (!storedUser?.username) {
+        throw new Error('Not logged in');
+      }
+
+      const response = await fetch(`http://localhost:5001/api/profile/${storedUser.username}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setUserData(data.user);
+      } else {
+        setError(data.message);
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
+
+  const handleOpenConfirm = () => {
+    setOpenConfirm(true);
+  };
+
+  const handleCloseConfirm = () => {
+    setOpenConfirm(false);
+  };
+
+  const handleConfirmDelete = () => {
+    handleCloseConfirm();
+    // Proceed with delete and redirect
+    handleDelete();
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/listings/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        navigate('/listings');
+      }
+      else {
+        throw new Error('Failed to delete listing');
+      }
+      navigate('/home'); // Redirect to homepage after successful deletion
+    } catch (err) {
+      setError(err.message);
+    }
+  };
 
   // Handle previous image click
   const handlePrevImage = () => {
@@ -47,7 +113,7 @@ function ListingDetail() {
     }
   };
 
-  if (loading) {
+  if (profileLoading || listingLoading) {
     return <CircularProgress />; // Show loading spinner while fetching
   }
 
@@ -112,9 +178,7 @@ function ListingDetail() {
                 zIndex: 10,
                 backgroundColor: 'rgba(0, 0, 0, 0.5)',
                 color: 'white',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                },
+                '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
               }}
             >
               <ArrowBackIosNewIcon />
@@ -130,9 +194,7 @@ function ListingDetail() {
                 zIndex: 10,
                 backgroundColor: 'rgba(0, 0, 0, 0.5)',
                 color: 'white',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                },
+                '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
               }}
             >
               <ArrowForwardIosIcon />
@@ -141,7 +203,7 @@ function ListingDetail() {
 
           <CardContent sx={{ width: '30%' }}>
             <Typography variant="h5" component="div" fontWeight="bold" align='left'>
-              {listing.title}
+              {listing.title} {listing.user_id}
             </Typography>
             <Typography variant="body2" color="text.secondary" align='left'>
               {listing.location}
@@ -155,13 +217,13 @@ function ListingDetail() {
 
             <hr style={{ margin: '16px 0', border: '1px solid #ccc' }} />
 
-            <Typography variant="h6" component="div" fontWeight="bold" align="left" sx={{ marginBottom: '8px' }}>
+            <Typography variant="h7" component="div" fontWeight="bold" align="left" sx={{ marginBottom: '8px' }}>
               Seller Information:
             </Typography>
 
             <Box sx={{ marginBottom: '16px' }}>
               <Typography variant="body1" color="text.primary" align="left" sx={{ fontWeight: 'bold' }}>
-                Name: {listing.seller.full_name}
+                {listing.seller.full_name}
               </Typography>
               <Typography variant="body2" color="text.secondary" align="left">
                 Description: {listing.seller.description || 'No description available'}
@@ -171,16 +233,15 @@ function ListingDetail() {
               </Typography>
             </Box>
 
-            <CardActions>
+            <CardActions sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
               {/* TO DO: connect this button to the chat function to contact seller! */}
+              {userData.username !== listing.seller.username && (
               <Button
                   size="small"
                   sx={{
                     backgroundColor: '#007BFF', // Blue color
                     color: 'white',
-                    '&:hover': {
-                      backgroundColor: '#0056b3', // Darker blue for hover
-                    },
+                    '&:hover': { backgroundColor: '#0056b3' },
                     borderRadius: '8px', // Rounded corners
                     padding: '8px 16px', // Padding
                     fontWeight: 'bold', // Bold text
@@ -188,6 +249,73 @@ function ListingDetail() {
                 >           
                 Contact Seller
               </Button>
+              )}
+              
+              {userData.username === listing.seller.username  && (
+                <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center', alignItems: 'center'}}>
+                  <Button
+                    size="small"
+                    sx={{
+                      backgroundColor: '#007BFF',
+                      color: 'white',
+                      '&:hover': { backgroundColor: '#0056b3' },
+                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      fontWeight: 'bold',
+                      flex: 1
+                    }}
+                    onClick={() => {
+                      setSelectedListing(listing); // listing is the data object for the item to edit
+                      setEditOpen(true);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <EditListingPopup open={isEditOpen}
+                      onClose={() => setEditOpen(false)}
+                      onSave={(updatedListing) => {setEditOpen(false);}}
+                      listingData={selectedListing}
+                    />
+                  <Button
+                    size="small"
+                    sx={{
+                      backgroundColor: 'red',
+                      color: 'white',
+                      '&:hover': { backgroundColor: '#d40000' },
+                      borderRadius: '8px',
+                      padding: '8px 16px',
+                      fontWeight: 'bold',
+                      flex: 1
+                    }}
+                    color="error"
+                    onClick={handleOpenConfirm}
+                  >
+                    Delete
+                  </Button>
+                </Box>
+              )}
+
+              {/* Confirmation Dialog */}
+              <Dialog
+                open={openConfirm}
+                onClose={handleCloseConfirm}
+              >
+                <DialogTitle>Confirm Deletion</DialogTitle>
+                <DialogContent>
+                  <DialogContentText>
+                    Are you sure you want to delete this listing? This action cannot be undone.
+                  </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={handleCloseConfirm} color="primary">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleConfirmDelete} color="error">
+                    Confirm
+                  </Button>
+                </DialogActions>
+              </Dialog>
+
             </CardActions>
           </CardContent>
         </Box>
