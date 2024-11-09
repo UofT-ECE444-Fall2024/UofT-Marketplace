@@ -321,50 +321,6 @@ def update_listing(id):
     except Exception as e:
         db.session.rollback()
 
-@bp.route('/api/conversations', methods=['POST'])
-def create_conversation():
-    try:
-        data = request.get_json()
-        user_ids = data.get('user_ids')
-        item_id = data.get('item_id')  # Get item_id from the request data
-
-        if not user_ids or len(user_ids) != 2:
-            return jsonify({'status': 'error', 'message': 'Exactly two users required'}), 400
-        
-        if not item_id:
-            return jsonify({'status': 'error', 'message': 'item_id is required'}), 400
-
-        # Verify that the item exists
-        item = Item.query.get(item_id)
-        if not item:
-            return jsonify({'status': 'error', 'message': 'Item not found'}), 404
-
-        # Create the new conversation
-        new_conversation = Conversation(
-            item_id=item_id,
-            created_at=datetime.utcnow(),
-            last_message='',
-            last_message_timestamp=None
-        )
-        db.session.add(new_conversation)
-        db.session.commit()
-
-        # Create conversation participants
-        participants = [
-            ConversationParticipant(user_id=uid, conversation_id=new_conversation.id) for uid in user_ids
-        ]
-        db.session.bulk_save_objects(participants)
-        db.session.commit()
-
-        return jsonify({
-            'status': 'success',
-            'conversation': new_conversation.to_dict()
-        }), 201
-    except Exception as e:
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
 
 @bp.route('/api/listings/<int:listing_id>/images/<int:image_index>', methods=['DELETE'])
 def delete_image(listing_id, image_index):
@@ -411,6 +367,53 @@ def delete_listing(id):
             "status": "error", 
             "message": "Unauthorized or listing not found"
         }), 404
+
+
+@bp.route('/api/conversations', methods=['POST'])
+def create_conversation():
+    try:
+        data = request.get_json()
+        user_ids = data.get('user_ids')
+        item_id = data.get('item_id')  # Get item_id from the request data
+
+        if not user_ids or len(user_ids) != 2:
+            return jsonify({'status': 'error', 'message': 'Exactly two users required'}), 400
+        
+        if not item_id:
+            return jsonify({'status': 'error', 'message': 'item_id is required'}), 400
+
+        # Verify that the item exists
+        item = Item.query.get(item_id)
+        if not item:
+            return jsonify({'status': 'error', 'message': 'Item not found'}), 404
+
+        # Create the new conversation
+        new_conversation = Conversation(
+            item_id=item_id,
+            created_at=datetime.utcnow(),
+            last_message='',
+            last_message_timestamp=None
+        )
+        db.session.add(new_conversation)
+        db.session.commit()
+
+        # Create conversation participants
+        participants = [
+            ConversationParticipant(user_id=uid, conversation_id=new_conversation.id) for uid in user_ids
+        ]
+        db.session.bulk_save_objects(participants)
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'conversation': new_conversation.to_dict()
+        }), 201
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
     
 @bp.route('/api/conversations/<int:user_id>', methods=['GET'])
 def get_conversations(user_id):
