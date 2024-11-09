@@ -21,7 +21,7 @@ function ListingsGrid({listings, setListings}) {
 
   const fetchFavorites = async () => {
     try {
-      const userId = 1;
+      const userId = JSON.parse(localStorage.getItem('user')).id;
       const response = await fetch(`http://localhost:5001/api/favorites/${userId}`);
       const data = await response.json();
 
