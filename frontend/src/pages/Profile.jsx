@@ -2,7 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Container, Paper, Typography, Box, Chip, Avatar,Grid,Card,
   CardContent, CardMedia, Rating, Divider, Tabs, Tab } from '@mui/material';
 import { CheckCircle, Cancel, Star } from '@mui/icons-material';
-import ListingCard from '../components/ListingCard';
+import Toolbar from '@mui/material/Toolbar';
+
+// Placeholder data for listings
+const MOCK_LISTINGS = [
+  {
+    id: 1,
+    title: "Vintage Camera",
+    price: "$120",
+    image: "/api/placeholder/300/200",
+    status: "active"
+  },
+  {
+    id: 2,
+    title: "Mountain Bike",
+    price: "$450",
+    image: "/api/placeholder/300/200",
+    status: "active"
+  }
+];
 
 // Placeholder data for reviews
 const MOCK_REVIEWS = [
@@ -83,6 +101,7 @@ const Profile = () => {
 
   return (
     <Container maxWidth="lg" className="mt-8">
+      <Toolbar />
       <Paper elevation={3} className="p-8">
         <Box className="flex flex-col md:flex-row gap-8">
           {/* Left Column - User Info */}
@@ -114,17 +133,17 @@ const Profile = () => {
 
               <Box className="flex items-center gap-1 mt-4">
                 <Rating 
-                  value={4.5} // Placeholder rating
+                  value={userData.rating} // Placeholder rating
                   precision={0.5}
                   readOnly
                 />
                 <Typography variant="body2" color="textSecondary">
-                  (4.5/5)
+                  ({userData.rating}/5)
                 </Typography>
               </Box>
 
               <Typography variant="body2" color="textSecondary" className="mt-1">
-                Based on 23 reviews
+                Based on {userData.rating_count} reviews
               </Typography>
             </Box>
 

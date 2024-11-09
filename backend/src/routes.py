@@ -3,9 +3,6 @@ from src.models import db, User, Item, ItemImage, Favorite
 from src.search_algorithm import search_algorithm
 from sqlalchemy import and_
 from datetime import datetime, timedelta
-from src.search_algorithm import search_algorithm
-from sqlalchemy import and_
-from datetime import datetime, timedelta
 import base64
 
 bp = Blueprint('main', __name__)
@@ -35,7 +32,9 @@ def register():
         full_name=full_name,
         email=email,
         verified=False,
-        description=''
+        description='',
+        rating=0.0,
+        rating_count=0,
     )
     new_user.set_password(password)
     
@@ -405,6 +404,45 @@ def delete_listing(id):
         "message": "Unauthorized or listing not found"
     }), 404
 
+@bp.route('/api/profile/rate', methods=['POST'])
+def write_rating():
+    data = request.get_json()
+    username = data.get('username')
+    rating_input = data.get('rating')
+
+    # Get user that we're writing review for from database
+    user = User.query.filter_by(username=username).first()
+
+    prev_rating = user.rating
+    rating_count = user.rating_count
+
+    # Calculate new user rating using a formula.
+    new_rating = (prev_rating*rating_count + rating_input)/(rating_count+1)
+
+    user.rating_count += 1
+    user.rating = new_rating
+
+    db.session.commit()
+
+    return {'msg': 'Rating submitted successfully.'}, 200
+
+@bp.route('/api/profile/rating/<username>', methods=['GET'])
+def read_rating(username):
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found'
+        }), 404
+
+    user_rating = user.rating
+
+    return jsonify({
+        'status': 'success',
+        'user_rating': user_rating
+    }), 200
+
 ####################################DEBUGGING############################
 @bp.route('/api/debug/users', methods=['GET'])
 def debug_users():
@@ -416,7 +454,8 @@ def debug_users():
         'full_name': user.full_name,  # Added full_name to debug output
         'verified': user.verified,
         'is_admin': user.is_admin,
-        'description': user.description  # Added description to debug output
+        'description': user.description,  # Added description to debug output
+        'joined_on': user.joined_on
     } for user in users]
     
     return jsonify({
@@ -441,7 +480,9 @@ def debug_profile(username):
         'email': user.email,
         'verified': user.verified,
         'is_admin': user.is_admin,
-        'description': user.description
+        'description': user.description,
+        'rating': user.rating,
+        'rating_count': user.rating_count
     })
 
 ## Favorites Feature

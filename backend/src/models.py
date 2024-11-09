@@ -15,6 +15,11 @@ class User(db.Model):
     verified = db.Column(db.Boolean, default=False)
     description = db.Column(db.Text, default='')
     is_admin = db.Column(db.Boolean, default=False)
+    joined_on = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Rating attributes
+    rating = db.Column(db.Float, nullable=False)
+    rating_count = db.Column(db.Integer, nullable=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -31,8 +36,30 @@ class User(db.Model):
             'email': self.email,
             'verified': self.verified,
             'description': self.description,
-            'is_admin': self.is_admin
+            'is_admin': self.is_admin,
+            'rating': self.rating,
+            'rating_count': self.rating_count,
+            'joined_on': self.joined_on
         }
+
+"""
+1. Items Table: This table stores information about items listed for sale.
+
+CREATE TABLE items (
+    item_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),  -- seller
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    category VARCHAR(100),  -- e.g., 'Furniture', 'Electronics'
+    price DECIMAL(10, 2),
+    condition VARCHAR(50),  -- e.g., 'New', 'Like New', 'Used'
+    pickup_location VARCHAR(255),  -- predefined secure locations
+    status VARCHAR(50) DEFAULT 'Available',  -- e.g., 'Available', 'Reserved', 'Sold'
+    urgent BOOLEAN DEFAULT FALSE,  -- whether listing is urgent
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+"""
 
 class Item(db.Model):
     __tablename__ = 'items'
@@ -74,7 +101,8 @@ class Item(db.Model):
                 'full_name': self.seller.full_name,
                 'email': self.seller.email,
                 'description': self.seller.description,
-                'verified': self.seller.verified
+                'verified': self.seller.verified,
+                'joined_on': self.seller.joined_on,
             }
         }
 
