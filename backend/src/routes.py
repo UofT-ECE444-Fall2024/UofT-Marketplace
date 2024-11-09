@@ -405,6 +405,17 @@ def delete_listing(id):
             "status": "error", 
             "message": "Unauthorized or listing not found"
         }), 404
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify({
+            "status": "success", 
+            "message": "Listing deleted successfully"
+        }), 200
+    except Exception:
+        return jsonify({
+            "status": "error", 
+            "message": "Unauthorized or listing not found"
+        }), 404
 
 
 @bp.route('/api/conversations', methods=['POST'])
@@ -545,22 +556,6 @@ def write_rating():
 
     return {'msg': 'Rating submitted successfully.'}, 200
 
-@bp.route('/api/profile/rating/<username>', methods=['GET'])
-def read_rating(username):
-    user = User.query.filter_by(username=username).first()
-
-    if not user:
-        return jsonify({
-            'status': 'error',
-            'message': 'User not found'
-        }), 404
-
-    user_rating = user.rating
-
-    return jsonify({
-        'status': 'success',
-        'user_rating': user_rating
-    }), 200
 
 ## Favorites Feature
 @bp.route('/api/favorites/<int:user_id>', methods=['GET'])
@@ -655,27 +650,6 @@ def remove_favorite(user_id, item_id):
             'message': str(e)
         }), 500
 
-@bp.route('/api/profile/rate', methods=['POST'])
-def write_rating():
-    data = request.get_json()
-    username = data.get('username')
-    rating_input = data.get('rating')
-
-    # Get user that we're writing review for from database
-    user = User.query.filter_by(username=username).first()
-
-    prev_rating = user.rating
-    rating_count = user.rating_count
-
-    # Calculate new user rating using a formula.
-    new_rating = (prev_rating*rating_count + rating_input)/(rating_count+1)
-
-    user.rating_count += 1
-    user.rating = new_rating
-
-    db.session.commit()
-
-    return {'msg': 'Rating submitted successfully.'}, 200
 
 @bp.route('/api/profile/rating/<username>', methods=['GET'])
 def read_rating(username):

@@ -21,9 +21,6 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
-    # Initialize database
-    db.init_app(app)
-    socketio.init_app(app)
     
     # Create tables and admin user
     with app.app_context():
@@ -31,7 +28,7 @@ def create_app():
 
         # Initialize database
         db.init_app(app)
-
+        socketio.init_app(app)
         db.create_all()
         
         # Check if admin user exists, if not create it
@@ -53,5 +50,7 @@ def create_app():
 
     from src import routes
     app.register_blueprint(routes.bp)
+
+    socketio.init_app(app, cors_allowed_origins="*")
 
     return app
