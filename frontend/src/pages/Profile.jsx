@@ -1,21 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { 
-  Container, 
-  Paper, 
-  Typography, 
-  Box, 
-  Chip, 
-  Avatar,
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  Rating,
-  Divider,
-  Tabs,
-  Tab
-} from '@mui/material';
+import { Container, Paper, Typography, Box, Chip, Avatar,Grid,Card,
+  CardContent, CardMedia, Rating, Divider, Tabs, Tab } from '@mui/material';
 import { CheckCircle, Cancel, Star } from '@mui/icons-material';
+import ListingCard from '../components/ListingCard';
 import Toolbar from '@mui/material/Toolbar';
 
 // Placeholder data for listings
@@ -62,6 +49,7 @@ const TabPanel = ({ children, value, index }) => (
 
 const Profile = () => {
   const [userData, setUserData] = useState(null);
+  const [userItems, setUserItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(0);
@@ -73,6 +61,7 @@ const Profile = () => {
   const fetchProfile = async () => {
     try {
       const storedUser = JSON.parse(localStorage.getItem('user'));
+
       if (!storedUser?.username) {
         throw new Error('Not logged in');
       }
@@ -82,6 +71,15 @@ const Profile = () => {
       
       if (response.ok) {
         setUserData(data.user);
+        // Fetch user's items
+        const itemsResponse = await fetch(`http://localhost:5001/api/listings/user/${data.user.id}`);
+        const itemsData = await itemsResponse.json();
+
+        if (itemsResponse.ok) {
+          setUserItems(itemsData.items);
+        } else {
+          setError(itemsData.message);
+        }
       } else {
         setError(data.message);
       }
@@ -159,46 +157,44 @@ const Profile = () => {
             )}
           </Box>
 
-          {/* Right Column - Listings & Reviews */}
+          {/* Right Column - userItems & Reviews */}
           <Box className="md:w-2/3">
             <Tabs 
               value={activeTab} 
               onChange={(e, newValue) => setActiveTab(newValue)}
               className="mb-4"
             >
-              <Tab label={`Listings (${MOCK_LISTINGS.length})`} />
+              <Tab label={`userItems (${userItems.length})`} />
               <Tab label={`Reviews (${MOCK_REVIEWS.length})`} />
             </Tabs>
 
             <TabPanel value={activeTab} index={0}>
-              <Grid container spacing={3}>
-                {MOCK_LISTINGS.map((listing) => (
-                  <Grid item xs={12} sm={6} key={listing.id}>
-                    <Card elevation={2}>
-                      <CardMedia
-                        component="img"
-                        height="200"
+            <Grid container spacing={3}>
+                {/* Check if there are userItems to display */}
+                {userItems.length > 0 ? (
+                  userItems.map((listing, index) => (
+                    <Grid item key={index} xs={12} sm={6} md={6} lg={4}>
+                      <ListingCard
                         image={listing.image}
-                        alt={listing.title}
+                        title={listing.title}
+                        location={listing.location}
+                        price={listing.price}
+                        id={listing.id}
+                        sx={{
+                          maxWidth: 300,
+                          height: 60, // Adjust the height to make the card shorter
+                          overflow: 'hidden', // Ensures content doesn't overflow
+                        }}
                       />
-                      <CardContent>
-                        <Typography variant="subtitle1" className="font-semibold">
-                          {listing.title}
-                        </Typography>
-                        <Typography variant="body1" color="primary" className="font-bold">
-                          {listing.price}
-                        </Typography>
-                        <Chip 
-                          label={listing.status}
-                          size="small"
-                          color={listing.status === 'active' ? 'success' : 'default'}
-                          className="mt-2"
-                        />
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
+                    </Grid>
+                  ))
+                ) : (
+                  <Box sx={{ width: '100%', textAlign: 'center', marginTop: 5 }}>
+                    <Typography>No userItems available currently!</Typography>
+                  </Box>
+                )}
               </Grid>
+             
             </TabPanel>
 
             <TabPanel value={activeTab} index={1}>
