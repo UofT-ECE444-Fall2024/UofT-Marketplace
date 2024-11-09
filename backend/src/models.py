@@ -15,6 +15,11 @@ class User(db.Model):
     verified = db.Column(db.Boolean, default=False)
     description = db.Column(db.Text, default='')
     is_admin = db.Column(db.Boolean, default=False)
+    joined_on = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Rating attributes
+    rating = db.Column(db.Float, nullable=False)
+    rating_count = db.Column(db.Integer, nullable=False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -31,21 +36,12 @@ class User(db.Model):
             'email': self.email,
             'verified': self.verified,
             'description': self.description,
-            'is_admin': self.is_admin
+            'is_admin': self.is_admin,
+            'rating': self.rating,
+            'rating_count': self.rating_count,
+            'joined_on': self.joined_on
         }
-    
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.username,
-            'password_hash': self.password_hash,
-            'full_name': self.full_name,
-            'email': self.email,
-            'verified': self.verified,
-            'description': self.description,
-            'is_admin': self.is_admin
-        }
-    
+
 """
 1. Items Table: This table stores information about items listed for sale.
 
@@ -101,7 +97,8 @@ class Item(db.Model):
                 'full_name': self.seller.full_name,
                 'email': self.seller.email,
                 'description': self.seller.description,
-                'verified': self.seller.verified
+                'verified': self.seller.verified,
+                'joined_on': self.seller.joined_on,
             }
         }
 
