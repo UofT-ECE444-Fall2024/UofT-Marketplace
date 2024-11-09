@@ -318,8 +318,6 @@ def get_listing(id):
 def update_listing(id):
     try:
         data = request.json
-
-        # Retrieve the existing item by ID
         item = Item.query.get(id)
 
         if not item:
@@ -328,15 +326,13 @@ def update_listing(id):
                 'message': 'Listing not found'
             }), 404
 
-        # Update item fields
         item.title = data.get('title', item.title)
         item.description = data.get('description', item.description)
         item.price = float(data['price'].replace('$', '')) if 'price' in data else item.price
         item.location = data.get('location', item.location)
 
-        # Handle image updates
         for image_data in data.get('images', []):
-            # Remove data URL prefix (e.g., 'data:image/jpeg;base64,')
+            # Remove data URL prefix 
             image_parts = image_data.split(',')
             content_type = image_parts[0].split(':')[1].split(';')[0]
             binary_data = base64.b64decode(image_parts[1])
@@ -350,7 +346,6 @@ def update_listing(id):
 
         db.session.commit()
 
-        # Return the updated item data using the to_dict method
         return jsonify({
             'status': 'success',
             'message': 'Listing updated successfully',
@@ -368,7 +363,6 @@ def delete_image(listing_id, image_index):
         if not item:
             return jsonify({'status': 'error', 'message': 'Listing not found'}), 404
 
-        # Get the list of images for the item
         images = item.images
         if image_index < 0 or image_index >= len(images):
             return jsonify({'status': 'error', 'message': 'Image index out of range'}), 404
@@ -413,7 +407,7 @@ def create_conversation():
     try:
         data = request.get_json()
         user_ids = data.get('user_ids')
-        item_id = data.get('item_id')  # Get item_id from the request data
+        item_id = data.get('item_id')
 
         if not user_ids or len(user_ids) != 2:
             return jsonify({'status': 'error', 'message': 'Exactly two users required'}), 400
@@ -421,12 +415,10 @@ def create_conversation():
         if not item_id:
             return jsonify({'status': 'error', 'message': 'item_id is required'}), 400
 
-        # Verify that the item exists
         item = Item.query.get(item_id)
         if not item:
             return jsonify({'status': 'error', 'message': 'Item not found'}), 404
 
-        # Create the new conversation
         new_conversation = Conversation(
             item_id=item_id,
             created_at=datetime.utcnow(),
@@ -436,7 +428,6 @@ def create_conversation():
         db.session.add(new_conversation)
         db.session.commit()
 
-        # Create conversation participants
         participants = [
             ConversationParticipant(user_id=uid, conversation_id=new_conversation.id) for uid in user_ids
         ]
