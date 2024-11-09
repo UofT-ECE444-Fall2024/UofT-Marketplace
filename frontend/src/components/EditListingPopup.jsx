@@ -64,7 +64,7 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
     const handleDeleteImage = async () => {
         try {
             // Assuming the image is deleted successfully from the backend
-            const response = await fetch(`http://localhost:5001/api/listings/${listingData.id}/images/${currentImageIndex}`, {
+            const response = await fetch(`/api/listings/${listingData.id}/images/${currentImageIndex}`, {
                 method: 'DELETE',
             });
     
@@ -113,7 +113,7 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
         try {
             const updatedImages = images.length > listingData.images.length ? images.slice(listingData.images.length) : [];
 
-            const response = await fetch(`http://localhost:5001/api/listings/${listingData.id}`, {
+            const response = await fetch(`/api/listings/${listingData.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

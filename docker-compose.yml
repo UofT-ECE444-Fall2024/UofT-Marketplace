@@ -1,18 +1,20 @@
-services:
-  frontend:
-    build:
-      context: ./frontend
-    ports:
-      - "3000:3000"
-    volumes:
-      - ./frontend:/frontend
-    depends_on:
-      - backend
+version: '3'  # or the appropriate version
 
+services:
   backend:
-    build:
-      context: ./backend
+    container_name: boba-backend
+    command: ["gunicorn", "app:app", "--workers=2", "--bind=0.0.0.0:5000"]
+    build: ./backend
+    environment:
+      - FLASK_APP=src:create_app 
+      - FLASK_ENV=production 
     ports:
-      - "5000:5000"
-    volumes:
-      - ./backend:/backend
+      - '5000:5000'
+  frontend:
+    container_name: boba-frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile.prod
+    ports:
+      - '80:80'
+      - '443:443'

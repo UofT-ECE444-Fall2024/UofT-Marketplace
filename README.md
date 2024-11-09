@@ -21,30 +21,18 @@ This version of the website is built using Flask and React, orchestrated with Do
 
 
 ## Development
-
-### Locally with `venv`
-(In the root directory)
-1. Run `make create-venv` to create a virtual environment inside of the `/backend` folder
-2. Run `make install` to install the dependencies for the backend and frontend
-3. Run `make start` to spin up the application
-
-Navigate to http://localhost:3000/ to see the application
-
-### With Docker 
 1. Ensure your local files are synced with any updates on GitHub.
-2. Run the following command in the main directory (make sure Docker is running!):
+2. Run the following commands in the main directory (make sure Docker is running!). NOTE: The build command may take 3-4 minutes, but you only need it to run it once:
 ```
-make docker-up
+docker-compose -f docker-compose.dev.yml build
+docker-compose -f docker-compose.dev.yml up
 ```
-
-Navigate to http://localhost:3000/ to see the application.
-
-To stop the application, run `make docker-down`
+and navigate to http://localhost:3000/ to view your local version of the website!
 
 
 * The `build` command should be ran after any packages are installed, so to be safe, run it every time you pull from GitHub (and whenever you install new packages).
 * Hot reloading is enabled for both Flask and React, meaning you can make changes to your files, save them, and they'll be reflected on localhost.
-* If stuff seems really broken, run `docker system prune -a` then the usual command (there's probably a more efficient way to do this).
+* If stuff seems broken and you're not sure why, try running `docker system prune -a` then the usual build and run commands. This sometimes happens because Docker caches packages from an outdated code, causing package discrepencies.
 * Sometimes you need a `-V` at the end of the command, but idk.
 
 ## Pushing Working Changes
