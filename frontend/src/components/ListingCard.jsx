@@ -1,26 +1,57 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, Typography, IconButton, Box } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 
-function ListingCard({ image, title, location, price, id }) {
-  const [isFavorite, setIsFavorite] = useState(false);
+function ListingCard({ image, title, location, price, id, isFavorite, onFavoriteUpdate, userId }) {
+  const [favoriteStatus, setFavoriteStatus] = useState(isFavorite);
 
-  const handleFavoriteClick = useCallback((e) => {
-    // Stop the card click from firing
-    e.stopPropagation();
-    setIsFavorite((prev) => !prev);
-  }, []);
+  // Update local state when parent component changes the `isFavorite` prop
+  useEffect(() => {
+    setFavoriteStatus(isFavorite);
+  }, [isFavorite]);
+
+  const handleFavoriteClick = useCallback(
+    async (e) => {
+      const userId = JSON.parse(localStorage.getItem('user')).id;
+      e.stopPropagation();
+      const newFavoriteStatus = !favoriteStatus;
+      setFavoriteStatus(newFavoriteStatus);
+      // console.log("TheIds ", 1, id);
+      try {
+        if (newFavoriteStatus) {
+          // Send POST request to add favorite
+          await fetch('http://localhost:5001/api/favorites', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user_id: userId, item_id: id }),
+          });
+        } else {
+          // Send DELETE request to remove favorite
+          await fetch(`http://localhost:5001/api/favorites/${userId}/${id}`, {
+            method: 'DELETE',
+          });
+        }
+        // Inform parent component of the update
+        onFavoriteUpdate(id, newFavoriteStatus);
+      } catch (error) {
+        console.error('Error updating favorite status:', error);
+        // Revert state if API request fails
+        setFavoriteStatus(!newFavoriteStatus);
+      }
+    },
+    [favoriteStatus, id, onFavoriteUpdate, userId]
+  );
 
   const handleCardClick = () => {
-    // Open a new tab when the card is clicked, URL based on item ID
     const listingUrl = `/listings/${id}`;
     window.open(listingUrl, '_blank');
   };
 
   return (
     <Card sx={{ boxShadow: 2, borderRadius: 5, m: 2, overflow: 'hidden' }} onClick={handleCardClick}>
-      {/* Wrapping the image in a Box with padding to create a border effect */}
       <Box
         sx={{
           position: 'relative',
@@ -49,7 +80,7 @@ function ListingCard({ image, title, location, price, id }) {
             {title}
           </Typography>
           <IconButton aria-label="add to favorites" onClick={handleFavoriteClick}>
-            {isFavorite ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
+            {favoriteStatus ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
           </IconButton>
         </Box>
         <Typography variant="body2" color="text.secondary">
