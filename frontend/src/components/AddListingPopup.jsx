@@ -6,15 +6,7 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CloseIcon from '@mui/icons-material/Close';
 import { Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-
-const LOCATIONS = [
-  'Bahen',
-  'University College',
-  'Hart House',
-  'Sid Smith',
-  'Myhal',
-  'Robarts'
-];
+import { LOCATIONS } from './constants.js';
 
 function AddListingPopup({ open, onClose, onPublish }) {
   // State variables to manage form and image data

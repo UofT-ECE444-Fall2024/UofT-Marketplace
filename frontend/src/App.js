@@ -26,6 +26,7 @@ function App() {
         {/* <Route path="*" element={<NotFound />} /> Catch-all for 404 errors */}
         <Route path="/chat" element={<WithNavbar><Chat /></WithNavbar>} />
         <Route path="/profile" element={<WithNavbar><Profile /></WithNavbar>} />
+        <Route path="/landing" element={<WithNavbar><Landing /></WithNavbar>} />
 
       </Routes>
     </div>
