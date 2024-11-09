@@ -318,6 +318,8 @@ def get_listing(id):
 def update_listing(id):
     try:
         data = request.json
+
+        # Retrieve the existing item by ID
         item = Item.query.get(id)
 
         if not item:
@@ -326,13 +328,15 @@ def update_listing(id):
                 'message': 'Listing not found'
             }), 404
 
+        # Update item fields
         item.title = data.get('title', item.title)
         item.description = data.get('description', item.description)
         item.price = float(data['price'].replace('$', '')) if 'price' in data else item.price
         item.location = data.get('location', item.location)
 
+        # Handle image updates
         for image_data in data.get('images', []):
-            # Remove data URL prefix 
+            # Remove data URL prefix (e.g., 'data:image/jpeg;base64,')
             image_parts = image_data.split(',')
             content_type = image_parts[0].split(':')[1].split(';')[0]
             binary_data = base64.b64decode(image_parts[1])
@@ -346,6 +350,7 @@ def update_listing(id):
 
         db.session.commit()
 
+        # Return the updated item data using the to_dict method
         return jsonify({
             'status': 'success',
             'message': 'Listing updated successfully',
