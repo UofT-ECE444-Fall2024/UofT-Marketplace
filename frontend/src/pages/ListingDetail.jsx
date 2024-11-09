@@ -5,6 +5,7 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 
 import EditListingPopup from '../components/EditListingPopup';
+import ReadRating from '../components/ratings/ReadRating';
 
 
 function ListingDetail() {
@@ -16,7 +17,7 @@ function ListingDetail() {
   // listing details
   const [listing, setListing] = useState(null);
   const [listingLoading, setListingLoading] = useState(true);
-const [profileLoading, setProfileLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -216,21 +217,8 @@ const [profileLoading, setProfileLoading] = useState(true);
             </Typography>
 
             <hr style={{ margin: '16px 0', border: '1px solid #ccc' }} />
-
-            <Typography variant="h7" component="div" fontWeight="bold" align="left" sx={{ marginBottom: '8px' }}>
-              Seller Information:
-            </Typography>
-
             <Box sx={{ marginBottom: '16px' }}>
-              <Typography variant="body1" color="text.primary" align="left" sx={{ fontWeight: 'bold' }}>
-                {listing.seller.full_name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" align="left">
-                Description: {listing.seller.description || 'No description available'}
-              </Typography>
-              <Typography variant="body2" color="text.primary" align="left">
-                Status: {listing.seller.verified ? 'Verified' : 'Not Verified'}
-              </Typography>
+              <ReadRating username={listing.seller.username} fullname={listing.seller.full_name} verified={listing.seller.verified} joinedOn={listing.seller.joined_on} />
             </Box>
 
             <CardActions sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
