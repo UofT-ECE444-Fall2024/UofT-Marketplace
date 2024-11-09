@@ -3,6 +3,9 @@ from pathlib import Path
 from flask import Flask
 from flask_cors import CORS
 from src.models import db, User
+from flask_socketio import SocketIO
+
+socketio = SocketIO()
 
 def create_app():
     app = Flask(__name__)
@@ -19,6 +22,7 @@ def create_app():
     
     # Initialize database
     db.init_app(app)
+    socketio.init_app(app)
     
     # Create tables and admin user
     with app.app_context():
