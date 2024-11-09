@@ -235,6 +235,41 @@ def get_listings():
             'message': str(e)
         }), 500
 
+@bp.route('/api/listings/user/<int:user_id>', methods=['GET'])
+def get_items_by_user(user_id):
+
+    if not user_id:
+        return jsonify({'error': 'user_id is required'}), 400
+    
+    try:
+        items = Item.query.filter_by(user_id=user_id).all()
+        listings = []
+        
+        for item in items:
+            # Get the basic item data
+            item_data = item.to_dict()
+            
+            # Add the image if it exists
+            first_image = item.images[0] if item.images else None
+            if first_image:
+                image_b64 = base64.b64encode(first_image.image_data).decode('utf-8')
+                item_data['image'] = f'data:{first_image.content_type};base64,{image_b64}'
+            else:
+                item_data['image'] = None
+                
+            listings.append(item_data)
+
+        return jsonify({
+            'status': 'success',
+            'items': listings
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+            }), 500
+
 @bp.route('/api/listings/<int:id>', methods=['GET'])
 def get_listing(id):
     try:
