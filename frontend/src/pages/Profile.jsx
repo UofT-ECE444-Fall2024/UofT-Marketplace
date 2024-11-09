@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Container, Paper, Typography, Box, Chip, Avatar,Grid,Card,
   CardContent, CardMedia, Rating, Divider, Tabs, Tab } from '@mui/material';
 import { CheckCircle, Cancel, Star } from '@mui/icons-material';
+import ListingCard from '../components/ListingCard';
 import Toolbar from '@mui/material/Toolbar';
 
 // Placeholder data for listings

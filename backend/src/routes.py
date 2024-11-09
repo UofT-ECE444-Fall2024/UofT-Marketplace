@@ -148,7 +148,7 @@ def create_listing():
         db.session.rollback()
         return jsonify({
             'status': 'error',
-            'message': error
+            'message': e
         }), 500
 
 @bp.route('/api/listings', methods=['GET'])
