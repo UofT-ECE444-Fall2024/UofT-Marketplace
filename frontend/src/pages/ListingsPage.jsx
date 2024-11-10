@@ -104,7 +104,7 @@ function ListingsGrid({listings, setListings}) {
               <ListingCard
                 image={listing.image}
                 title={listing.title}
-                location={listing.location}
+                location={listing.location.join(',\n')}
                 price={listing.price}
                 id={listing.id}
                 isFavorite={favoriteIds.has(listing.id)}

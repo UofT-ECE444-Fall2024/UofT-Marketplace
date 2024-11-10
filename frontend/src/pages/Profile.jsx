@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Paper, Typography, Box, Chip, Avatar,Grid,Card,
-  CardContent, CardMedia, Rating, Divider, Tabs, Tab } from '@mui/material';
+import {
+  Container, Paper, Typography, Box, Chip, Avatar, Grid, Card,
+  CardContent, CardMedia, Rating, Divider, Tabs, Tab
+} from '@mui/material';
 import { CheckCircle, Cancel, Star } from '@mui/icons-material';
 import ListingCard from '../components/ListingCard';
 import Toolbar from '@mui/material/Toolbar';
@@ -68,7 +70,7 @@ const Profile = () => {
 
       const response = await fetch(`http://localhost:5001/api/profile/${storedUser.username}`);
       const data = await response.json();
-      
+
       if (response.ok) {
         setUserData(data.user);
         // Fetch user's items
@@ -107,7 +109,7 @@ const Profile = () => {
         <Box className="flex flex-col md:flex-row gap-8">
           {/* Left Column - User Info */}
           <Box className="flex flex-col items-center gap-4 md:w-1/3">
-            <Avatar 
+            <Avatar
               className="w-40 h-40 text-5xl bg-blue-600"
               src="/api/placeholder/160/160"  // Placeholder profile pic
             >
@@ -118,7 +120,7 @@ const Profile = () => {
               <Typography variant="h4" className="font-bold">
                 {userData.full_name}
               </Typography>
-              
+
               <Typography variant="subtitle1" color="textSecondary">
                 @{userData.username}
               </Typography>
@@ -133,7 +135,7 @@ const Profile = () => {
               </Box>
 
               <Box className="flex items-center gap-1 mt-4">
-                <Rating 
+                <Rating
                   value={userData.rating} // Placeholder rating
                   precision={0.5}
                   readOnly
@@ -159,8 +161,8 @@ const Profile = () => {
 
           {/* Right Column - userItems & Reviews */}
           <Box className="md:w-2/3">
-            <Tabs 
-              value={activeTab} 
+            <Tabs
+              value={activeTab}
               onChange={(e, newValue) => setActiveTab(newValue)}
               className="mb-4"
             >
@@ -169,7 +171,7 @@ const Profile = () => {
             </Tabs>
 
             <TabPanel value={activeTab} index={0}>
-            <Grid container spacing={3}>
+              <Grid container spacing={3}>
                 {/* Check if there are userItems to display */}
                 {userItems.length > 0 ? (
                   userItems.map((listing, index) => (
@@ -177,7 +179,7 @@ const Profile = () => {
                       <ListingCard
                         image={listing.image}
                         title={listing.title}
-                        location={listing.location}
+                        location={listing.location.join(',\n')}
                         price={listing.price}
                         id={listing.id}
                         sx={{
@@ -194,7 +196,7 @@ const Profile = () => {
                   </Box>
                 )}
               </Grid>
-             
+
             </TabPanel>
 
             <TabPanel value={activeTab} index={1}>

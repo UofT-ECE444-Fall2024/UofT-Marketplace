@@ -1,11 +1,8 @@
 from flask import Blueprint, jsonify, request
 from src.models import db, User, Item, ItemImage, Favorite
-<<<<<<< HEAD
 from src.search_algorithm import search_algorithm
 from sqlalchemy import and_
 from datetime import datetime, timedelta
-=======
->>>>>>> 347ee86 (update db location in backend)
 import base64
 
 bp = Blueprint('main', __name__)

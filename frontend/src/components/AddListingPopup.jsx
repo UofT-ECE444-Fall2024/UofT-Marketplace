@@ -5,12 +5,11 @@ import ImageCarousel from './AddListing/ImageCarousel';
 import ListingForm from './AddListing/ListingForm';
 
 function AddListingPopup({ open, onClose, onPublish }) {
-  // State variables to manage form and image data
   const [images, setImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [title, setTitle] = useState('');
   const [price, setPrice] = useState('');
-  const [location, setLocation] = useState('');
+  const [locations, setLocations] = useState([]); // Changed to array for multiple locations
   const [description, setDescription] = useState('');
   const [condition, setCondition] = useState('');
   const [category, setCategory] = useState('');
@@ -18,20 +17,16 @@ function AddListingPopup({ open, onClose, onPublish }) {
   const [imageError, setImageError] = useState('');
   const [publishError, setPublishError] = useState('');
 
-  // Handle the publishing of the listing
   const handlePublish = async () => {
     setPublishError('');
-    // Validate required fields
-    if (!title || !price || !location || !condition || !category || images.length === 0) {
-      setPublishError('Please fill in all required fields and add at least one image.');
+    if (!title || !price || locations.length === 0 || !condition || !category || images.length === 0) {
+      setPublishError('Please fill in all required fields and add at least one image and location.');
       return;
     }
 
-    // Start loading state
     setLoading(true);
 
     try {
-      // Fetch the logged-in user's profile
       const storedUser = JSON.parse(localStorage.getItem('user'));
       if (!storedUser?.username) {
         throw new Error('Not logged in');
@@ -43,7 +38,6 @@ function AddListingPopup({ open, onClose, onPublish }) {
         throw new Error(userdata.message);
       }
 
-      // Use the logged-in user's ID for the listing
       const user_id = userdata.user.id;
 
       const response = await fetch('http://localhost:5001/api/listings', {
@@ -52,10 +46,10 @@ function AddListingPopup({ open, onClose, onPublish }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: user_id, // Replace with actual user ID from auth
+          user_id: user_id,
           title,
           price,
-          location,
+          location: locations, // Send array of locations
           condition,
           category,
           description,
@@ -66,7 +60,6 @@ function AddListingPopup({ open, onClose, onPublish }) {
       const data = await response.json();
 
       if (data.status === 'success') {
-        // Use the returned item data from the server
         onPublish(data.item);
 
         // Reset form
@@ -74,7 +67,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
         setCurrentImageIndex(0);
         setTitle('');
         setPrice('');
-        setLocation('');
+        setLocations([]);
         setCondition('');
         setCategory('');
         setDescription('');
@@ -110,8 +103,8 @@ function AddListingPopup({ open, onClose, onPublish }) {
             setTitle={setTitle}
             price={price}
             setPrice={setPrice}
-            location={location}
-            setLocation={setLocation}
+            location={locations} // Pass locations array instead of single location
+            setLocation={setLocations} // Pass setLocations function
             condition={condition}
             setCondition={setCondition}
             description={description}

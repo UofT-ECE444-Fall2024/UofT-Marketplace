@@ -207,7 +207,7 @@ function ListingDetail() {
               {listing.title} {listing.user_id}
             </Typography>
             <Typography variant="body2" color="text.secondary" align='left'>
-              {listing.location}
+              {listing.location.join(',\n')}
             </Typography>
             <Typography variant="body1" color="text.primary" fontWeight="bold" align='left'>
               Price: {listing.price} ~ {listing.status}

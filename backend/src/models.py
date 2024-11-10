@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from sqlalchemy.dialects.postgresql import JSON
 
 db = SQLAlchemy()
 
@@ -72,7 +73,6 @@ CREATE TABLE items (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 """
-
 class Item(db.Model):
     __tablename__ = 'items'
     
@@ -81,7 +81,7 @@ class Item(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
     price = db.Column(db.Numeric(10, 2), nullable=False)
-    location = db.Column(db.String(255), nullable=False)
+    location = db.Column(JSON, nullable=False)  # Use JSON to store multiple locations
     condition = db.Column(db.String(255), nullable=False)
     category = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(50), default='Available')
@@ -93,13 +93,12 @@ class Item(db.Model):
     seller = db.relationship('User', backref='items')
     favorited_by = db.relationship('User', secondary='favorites', lazy='dynamic')
 
-
     def to_dict(self):
         return {
             'id': self.id,
             'title': self.title,
             'price': f'${self.price}',
-            'location': self.location,
+            'location': self.location,  # Already JSON serializable if it's a list
             'description': self.description,
             'condition': self.condition,
             'category': self.category,
