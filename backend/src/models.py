@@ -99,7 +99,8 @@ class Item(db.Model):
                 'description': self.seller.description,
                 'verified': self.seller.verified,
                 'joined_on': self.seller.joined_on,
-            }
+            },
+            'images': [img.image_url for img in self.images]
         }
 
 class ItemImage(db.Model):
@@ -107,8 +108,7 @@ class ItemImage(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
-    image_data = db.Column(db.LargeBinary, nullable=False)
-    content_type = db.Column(db.String(100), nullable=False)
+    image_url = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Favorite(db.Model):
