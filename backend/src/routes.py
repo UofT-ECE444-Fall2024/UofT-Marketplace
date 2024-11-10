@@ -168,7 +168,7 @@ def get_listings():
         if condition_query:
             # Split the comma-separated string into a list and filter using `in_`
             conditions = condition_query.split(',')
-            # filters.append(Item.condition.in_(conditions))
+            filters.append(Item.condition.in_(conditions))
 
         if location_query:
             # Split the comma-separated string into a list and filter using `in_`
