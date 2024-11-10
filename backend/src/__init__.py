@@ -28,7 +28,6 @@ def create_app():
 
         # Initialize database
         db.init_app(app)
-        socketio.init_app(app)
         db.create_all()
         
         # Check if admin user exists, if not create it

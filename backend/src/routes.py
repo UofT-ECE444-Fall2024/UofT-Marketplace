@@ -359,6 +359,10 @@ def update_listing(id):
 
     except Exception as e:
         db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
 
 
 @bp.route('/api/listings/<int:listing_id>/images/<int:image_index>', methods=['DELETE'])
@@ -368,6 +372,7 @@ def delete_image(listing_id, image_index):
         if not item:
             return jsonify({'status': 'error', 'message': 'Listing not found'}), 404
 
+        # Get the list of images for the item
         images = item.images
         if image_index < 0 or image_index >= len(images):
             return jsonify({'status': 'error', 'message': 'Image index out of range'}), 404
@@ -394,17 +399,6 @@ def delete_listing(id):
     try:
         item = Item.query.get(id)
 
-        db.session.delete(item)
-        db.session.commit()
-        return jsonify({
-            "status": "success", 
-            "message": "Listing deleted successfully"
-        }), 200
-    except Exception:
-        return jsonify({
-            "status": "error", 
-            "message": "Unauthorized or listing not found"
-        }), 404
         db.session.delete(item)
         db.session.commit()
         return jsonify({
