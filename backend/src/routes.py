@@ -42,12 +42,7 @@ def register():
     db.session.add(new_user)
     db.session.commit()
     
-    user_data = {
-        'username': username,
-        'full_name': full_name,
-        'verified': False,
-        'description': ''
-    }
+    user_data = new_user.to_dict()
     
     return jsonify({
         'status': 'success',
