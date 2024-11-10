@@ -21,8 +21,8 @@ function ListingsGrid({listings, setListings}) {
 
   const fetchFavorites = async () => {
     try {
-      const userId = 1;
-      const response = await fetch(`http://localhost:5001/api/favorites/${userId}`);
+      const userId = JSON.parse(localStorage.getItem('user')).id;
+      const response = await fetch(`/api/favorites/${userId}`);
       const data = await response.json();
 
       if (data.status === 'success') {
@@ -55,13 +55,13 @@ function ListingsGrid({listings, setListings}) {
       if (!userId) return;
 
       if (isFavorited) {
-        await fetch('http://localhost:5001/api/favorites', {
+        await fetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: userId, item_id: listingId })
         });
       } else {
-        await fetch(`http://localhost:5001/api/favorites/${userId}/${listingId}`, { method: 'DELETE' });
+        await fetch(`/api/favorites/${userId}/${listingId}`, { method: 'DELETE' });
       }
 
       const newFavoriteIds = new Set(favoriteIds);
@@ -148,7 +148,7 @@ const ListingsPage = () => {
 
   useEffect(() => {
     const apiSearchQuery = searchParams.toString().length > 0 ? `?${searchParams.toString()}` : "";
-    fetch(`http://localhost:5001/api/listings${apiSearchQuery}`)
+    fetch(`/api/listings${apiSearchQuery}`)
         .then(response => response.json())
         .then(data => {
           if (data.status === 'success') {

@@ -20,7 +20,7 @@ function ListingCard({ image, title, location, price, id, isFavorite, onFavorite
       try {
         if (newFavoriteStatus) {
           // Send POST request to add favorite
-          await fetch('http://localhost:5001/api/favorites', {
+          await fetch('/api/favorites', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ function ListingCard({ image, title, location, price, id, isFavorite, onFavorite
           });
         } else {
           // Send DELETE request to remove favorite
-          await fetch(`http://localhost:5001/api/favorites/${userId}/${id}`, {
+          await fetch(`/api/favorites/${userId}/${id}`, {
             method: 'DELETE',
           });
         }

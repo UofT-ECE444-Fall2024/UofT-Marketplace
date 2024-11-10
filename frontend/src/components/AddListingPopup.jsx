@@ -32,7 +32,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
         throw new Error('Not logged in');
       }
 
-      const userresponse = await fetch(`http://localhost:5001/api/profile/${storedUser.username}`);
+      const userresponse = await fetch(`/api/profile/${storedUser.username}`);
       const userdata = await userresponse.json();
       if (!userresponse.ok) {
         throw new Error(userdata.message);
@@ -40,7 +40,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
 
       const user_id = userdata.user.id;
 
-      const response = await fetch('http://localhost:5001/api/listings', {
+      const response = await fetch('/api/listings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
