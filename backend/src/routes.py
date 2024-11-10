@@ -236,7 +236,7 @@ def get_listings():
 def get_items_by_user(user_id):
 
     if not user_id:
-        return jsonify({'error': 'user_id is required'}), 400
+        return jsonify({'error': 'user_id is required'}), 404
     
     try:
         items = Item.query.filter_by(user_id=user_id).all()
