@@ -116,3 +116,71 @@ def test_get_items_by_user_non_existent_user(client):
     assert data['status'] == 'success'
     assert len(data['items']) == 0  # No items for the non-existent user
 
+
+### GET, PUT, and DELETE a single listing but item_id
+# Test GET /api/listings/<int:id>
+def test_get_listing(client, setup_listing_data):
+    item_id = setup_listing_data
+    response = client.get(f'/api/listings/{item_id}')
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['status'] == 'success'
+    assert data['listing']['title'] == 'Test Item'  # Check if the title matches
+
+def test_get_listing_not_found(client):
+    # Try to get a non-existent listing
+    response = client.get('/api/listings/99999')
+    data = response.get_json()
+
+    assert response.status_code == 404
+    assert data['status'] == 'error'
+    assert data['message'] == 'Listing not found'
+
+# Test PUT /api/listings/<int:id>
+def test_update_listing(client, setup_listing_data):
+    item_id = setup_listing_data
+    updated_data = {
+        'title': 'Updated Test Item',
+        'description': 'Updated description',
+        'price': '$30.00',
+        'location': ['Robarts'],
+        'images': []  # Can add images if necessary
+    }
+
+    response = client.put(f'/api/listings/{item_id}', json=updated_data)
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['status'] == 'success'
+    assert data['message'] == 'Listing updated successfully'
+    assert data['item']['title'] == 'Updated Test Item'
+    assert data['item']['price'] == '$30.00'  # Ensure price is updated correctly
+
+def test_update_listing_not_found(client):
+    # Try to update a non-existent listing
+    updated_data = {
+        'title': 'Non-existent Item',
+        'description': 'This item does not exist.',
+        'price': '$50.00',
+        'location': ['Robarts'],
+        'images': []
+    }
+    
+    response = client.put('/api/listings/99999', json=updated_data)
+    data = response.get_json()
+
+    assert response.status_code == 404
+    assert data['status'] == 'error'
+    assert data['message'] == 'Listing not found'
+
+# Test DELETE /api/listings/<int:id>
+def test_delete_listing(client, setup_listing_data):
+    item_id = setup_listing_data
+    response = client.delete(f'/api/listings/{item_id}')
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['status'] == 'success'
+    assert data['message'] == 'Listing deleted successfully'
+

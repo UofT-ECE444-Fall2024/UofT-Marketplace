@@ -70,3 +70,29 @@ def setup_data(client):
     
     # Return the user_id for use in other tests
     return user_id
+
+@pytest.fixture
+def setup_listing_data(client):
+    # Create a user
+    user_response = client.post('/api/auth/register', json={
+        'username': 'testuser',
+        'password': 'password123',
+        'full_name': 'Test User',
+        'email': 'testuser@example.com'
+    })
+    user_id = user_response.get_json()['user']['id']
+
+    # Create a listing for the user
+    response = client.post('/api/listings', json={
+        'user_id': user_id,
+        'title': 'Test Item',
+        'description': 'Description for test item',
+        'price': '$20.00',
+        'location': ['University College'],
+        'condition': 'New',
+        'category': 'Electronics',
+        'images': []
+    })
+    item_id = response.get_json()['item']['id']
+
+    return item_id
