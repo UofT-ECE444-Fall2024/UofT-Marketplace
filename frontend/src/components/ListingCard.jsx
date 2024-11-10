@@ -17,7 +17,6 @@ function ListingCard({ image, title, location, price, id, isFavorite, onFavorite
       e.stopPropagation();
       const newFavoriteStatus = !favoriteStatus;
       setFavoriteStatus(newFavoriteStatus);
-      // console.log("TheIds ", 1, id);
       try {
         if (newFavoriteStatus) {
           // Send POST request to add favorite

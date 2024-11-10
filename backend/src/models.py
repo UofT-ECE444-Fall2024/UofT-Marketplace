@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from sqlalchemy.dialects.postgresql import JSON
 
 db = SQLAlchemy()
 
@@ -41,7 +42,19 @@ class User(db.Model):
             'rating_count': self.rating_count,
             'joined_on': self.joined_on
         }
-
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'username': self.username,
+            'password_hash': self.password_hash,
+            'full_name': self.full_name,
+            'email': self.email,
+            'verified': self.verified,
+            'description': self.description,
+            'is_admin': self.is_admin
+        }
+    
 """
 1. Items Table: This table stores information about items listed for sale.
 
@@ -60,7 +73,6 @@ CREATE TABLE items (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 """
-
 class Item(db.Model):
     __tablename__ = 'items'
     
@@ -69,7 +81,9 @@ class Item(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
     price = db.Column(db.Numeric(10, 2), nullable=False)
-    location = db.Column(db.String(255), nullable=False)
+    location = db.Column(JSON, nullable=False)  # Use JSON to store multiple locations
+    condition = db.Column(db.String(255), nullable=False)
+    category = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(50), default='Available')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -79,14 +93,15 @@ class Item(db.Model):
     seller = db.relationship('User', backref='items')
     favorited_by = db.relationship('User', secondary='favorites', lazy='dynamic')
 
-
     def to_dict(self):
         return {
             'id': self.id,
             'title': self.title,
             'price': f'${self.price}',
-            'location': self.location,
+            'location': self.location,  # Already JSON serializable if it's a list
             'description': self.description,
+            'condition': self.condition,
+            'category': self.category,
             'status': self.status,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
