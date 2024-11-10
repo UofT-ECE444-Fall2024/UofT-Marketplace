@@ -57,6 +57,12 @@ const Auth = () => {
 
   // Callbacks for authentication events
   const callbacks = {
+    onEvent: () => {
+      const emailInput = document.getElementById('email-input').value;
+      if (!emailInput.endsWith('@mail.utoronto.ca') && !emailInput.endsWith('@utoronto.ca')) {
+        throw new Error("Please login with your utoronto email!"); 
+      }
+    },
     onSuccess: () => {
       // Navigate to home page on successful authentication
       navigate('/home');
