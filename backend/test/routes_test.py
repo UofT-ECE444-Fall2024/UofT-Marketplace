@@ -72,7 +72,7 @@ def test_get_listings(client):
         'email': 'testuser@example.com'
     })
     client.post('/api/listings', json={
-        'user_id': '1',
+        'user_id': 'testuser',
         'title': 'Test Item',
         'description': 'A test item description',
         'price': '$10.00',
@@ -108,4 +108,3 @@ def test_create_conversation(client):
 
     response = client.get('/api/conversations/1/messages', json=test_user_1)
     assert response.status_code == 200
-    
