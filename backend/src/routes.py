@@ -550,62 +550,6 @@ def write_rating():
 
     return {'msg': 'Rating submitted successfully.'}, 200
 
-@bp.route('/api/profile/rating/<username>', methods=['GET'])
-def read_rating(username):
-    user = User.query.filter_by(username=username).first()
-
-    if not user:
-        return jsonify({
-            'status': 'error',
-            'message': 'User not found'
-        }), 404
-
-    user_rating = user.rating
-
-    return jsonify({
-        'status': 'success',
-        'user_rating': user_rating
-    }), 200
-
-####################################DEBUGGING############################
-@bp.route('/api/debug/users', methods=['GET'])
-def debug_users():
-    users = User.query.all()
-    user_list = [{
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'full_name': user.full_name,  # Added full_name to debug output
-        'verified': user.verified,
-        'is_admin': user.is_admin,
-        'description': user.description,  # Added description to debug output
-        'joined_on': user.joined_on
-    } for user in users]
-    
-    return jsonify({
-        'user_count': len(user_list),
-        'users': user_list
-    })
-
-# Add a route to check specific user profile
-@bp.route('/api/debug/profile/<username>', methods=['GET'])
-def debug_profile(username):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return jsonify({
-            'status': 'error',
-            'message': 'User not found'
-        }), 404
-        
-    return jsonify({
-        'id': user.id,
-        'username': user.username,
-        'full_name': user.full_name,
-        'email': user.email,
-        'verified': user.verified,
-        'is_admin': user.is_admin,
-        'description': user.description
-    })
 
 ## Favorites Feature
 @bp.route('/api/favorites/<int:user_id>', methods=['GET'])
