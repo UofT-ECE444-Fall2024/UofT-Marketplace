@@ -5,7 +5,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 
 function ListingCard({ image, title, location, price, id, isFavorite, onFavoriteUpdate, userId }) {
   const [favoriteStatus, setFavoriteStatus] = useState(isFavorite);
-  console.log(image)
+
   // Update local state when parent component changes the `isFavorite` prop
   useEffect(() => {
     setFavoriteStatus(isFavorite);
