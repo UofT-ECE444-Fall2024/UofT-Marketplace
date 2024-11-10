@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from src.models import db, User, Item, ItemImage, Favorite, Conversation, ConversationParticipant, Message
 from src.search_algorithm import search_algorithm
-from sqlalchemy import and_
+from sqlalchemy import and_, desc
 from flask_socketio import emit, join_room
 from datetime import datetime, timedelta
 from src import socketio
@@ -429,9 +429,27 @@ def create_conversation():
         if not item:
             return jsonify({'status': 'error', 'message': 'Item not found'}), 404
 
+        existing_conversation = (
+            db.session.query(Conversation)
+            .join(ConversationParticipant)
+            .filter(
+                Conversation.item_id == item_id,
+                ConversationParticipant.user_id.in_(user_ids)
+            )
+            .group_by(Conversation.id)
+            .having(db.func.count(ConversationParticipant.id) == 2)
+            .first() 
+        )
+
+        if existing_conversation:
+            return jsonify({
+                'status': 'success',
+                'conversation': existing_conversation.to_dict()
+            }), 200
+
         new_conversation = Conversation(
             item_id=item_id,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(),
             last_message='',
             last_message_timestamp=None
         )
@@ -462,6 +480,7 @@ def get_conversations(user_id):
             db.session.query(Conversation)
             .join(ConversationParticipant)
             .filter(ConversationParticipant.user_id == user_id)
+            .order_by(desc(Conversation.last_message_timestamp))
             .all()
         )
         return jsonify({
@@ -488,14 +507,23 @@ def get_messages(conversation_id):
             'message': str(e)
         }), 500
 
-# Socket.IO Event Handlers
 
 @socketio.on('join_conversation')
 def handle_join_conversation(data):
     try:
         conversation_id = data['conversation_id']
+        user_id = data['user_id']
+        
         join_room(conversation_id)
-        emit('user_joined', {'conversation_id': conversation_id}, room=conversation_id)
+        
+        messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.created_at).all()
+        message_list = [msg.to_dict() for msg in messages]
+        
+        emit('joined', {
+            'conversation_id': conversation_id,
+            'messages': message_list
+        }, room=conversation_id)
+        
     except Exception as e:
         emit('error', {'message': str(e)})
 
@@ -511,7 +539,7 @@ def handle_send_message(data):
             conversation_id=conversation_id,
             sender_id=user_id,
             content=content,
-            created_at=datetime.utcnow()
+            created_at=datetime.now()
         )
         db.session.add(new_message)
         db.session.commit()
@@ -519,13 +547,14 @@ def handle_send_message(data):
         # Update conversation table with new message
         conversation = Conversation.query.get(conversation_id)
         conversation.last_message = content
-        conversation.last_message_timestamp = datetime.utcnow()
+        conversation.last_message_timestamp = datetime.now()
         db.session.commit()
 
         # Emit via WebSocket
         message_data = new_message.to_dict()
         emit('receive_message', message_data, room=conversation_id)
     except Exception as e:
+        print("UHOH")
         emit('error', {'message': str(e)})
 
 @bp.route('/api/profile/rate', methods=['POST'])

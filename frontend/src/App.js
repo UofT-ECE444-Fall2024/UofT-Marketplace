@@ -9,6 +9,8 @@ import ListingsGrid from './pages/ListingsPage';
 import ListingDetail from './pages/ListingDetail';
 // import NotFound from './NotFound'; // 404 Not Found component
 import RatingTest from './components/ratings/RatingTest'
+import ConversationsPage from './pages/ConversationsPage';
+import ChatPage from './pages/ChatPage';
 
 const WithNavbar = ({ children }) => (
   <>
@@ -25,7 +27,8 @@ function App() {
         <Route path="/home" element={<WithNavbar><ListingsGrid /></WithNavbar>} />
         <Route path="/listings/:id" element={<WithNavbar><ListingDetail /></WithNavbar>} /> {/* Dynamic route for listing details */}
         {/* <Route path="*" element={<NotFound />} /> Catch-all for 404 errors */}
-        <Route path="/chat" element={<WithNavbar><Chat /></WithNavbar>} />
+        <Route path="/chat" element={<WithNavbar><ConversationsPage /></WithNavbar>} />
+        <Route path="/chat/:conversationId" element={<WithNavbar><ChatPage /></WithNavbar>} />
         <Route path="/profile" element={<WithNavbar><Profile /></WithNavbar>} />
         <Route path="/landing" element={<WithNavbar><Landing /></WithNavbar>} />
         {/* The following route is temporary */}

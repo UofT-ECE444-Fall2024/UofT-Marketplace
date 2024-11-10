@@ -114,6 +114,32 @@ function ListingDetail() {
     }
   };
 
+  const handleOpenChat = async () => {
+    try {
+      const response = await fetch(`http://localhost:5001/api/conversations`, { 
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          'user_ids': [listing.seller.id, userData.id],
+          'item_id': id
+        })
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+  
+      navigate(`/chat/${data.conversation.id}`);
+  
+    } catch (err) {
+      setError(err);
+    }
+  };
+
   if (profileLoading || listingLoading) {
     return <CircularProgress />; // Show loading spinner while fetching
   }
@@ -221,7 +247,7 @@ function ListingDetail() {
 
             <hr style={{ margin: '16px 0', border: '1px solid #ccc' }} />
             <Box sx={{ marginBottom: '16px' }}>
-              <ReadRating username={listing.seller.username} fullname={listing.seller.full_name} verified={listing.seller.verified} joinedOn={listing.seller.joined_on} />
+              <ReadRating id={listing.seller.id} username={listing.seller.username} fullname={listing.seller.full_name} verified={listing.seller.verified} joinedOn={listing.seller.joined_on} />
             </Box>
 
             <CardActions sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
@@ -237,6 +263,7 @@ function ListingDetail() {
                     padding: '8px 16px', // Padding
                     fontWeight: 'bold', // Bold text
                   }}
+                  onClick={handleOpenChat}
                 >           
                 Contact Seller
               </Button>
