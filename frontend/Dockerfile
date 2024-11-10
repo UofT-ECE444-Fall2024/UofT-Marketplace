@@ -1,6 +1,5 @@
-FROM node:16-alpine
+FROM node:20-alpine
 WORKDIR /app/frontend
 COPY package.json ./package.json
-COPY package-lock.json ./package-lock.json
 RUN npm install
 COPY . ./
