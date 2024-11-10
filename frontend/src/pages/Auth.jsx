@@ -44,7 +44,7 @@ const Auth = () => {
       : formData;
 
     try {
-      const response = await fetch(`http://localhost:5001/api/auth/${endpoint}`, {
+      const response = await fetch(`/api/auth/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(submitData),
