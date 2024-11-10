@@ -1,8 +1,10 @@
 from flask import Blueprint, jsonify, request
-from src.models import db, User, Item, ItemImage, Favorite
+from src.models import db, User, Item, ItemImage, Favorite, Conversation, ConversationParticipant, Message
 from src.search_algorithm import search_algorithm
 from sqlalchemy import and_
+from flask_socketio import emit, join_room
 from datetime import datetime, timedelta
+from src import socketio
 import base64
 
 bp = Blueprint('main', __name__)
@@ -40,8 +42,11 @@ def register():
     
     db.session.add(new_user)
     db.session.commit()
+
+    user = User.query.filter_by(username=username).first()
     
     user_data = {
+        'id': user.id,
         'username': username,
         'full_name': full_name,
         'verified': False,
@@ -148,7 +153,7 @@ def create_listing():
         db.session.rollback()
         return jsonify({
             'status': 'error',
-            'message': e
+            'message': str(e)
         }), 500
 
 @bp.route('/api/listings', methods=['GET'])
@@ -354,10 +359,7 @@ def update_listing(id):
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'status': 'error',
-            'message': str(e)
-        }), 500
+
 
 @bp.route('/api/listings/<int:listing_id>/images/<int:image_index>', methods=['DELETE'])
 def delete_image(listing_id, image_index):
@@ -366,7 +368,6 @@ def delete_image(listing_id, image_index):
         if not item:
             return jsonify({'status': 'error', 'message': 'Listing not found'}), 404
 
-        # Get the list of images for the item
         images = item.images
         if image_index < 0 or image_index >= len(images):
             return jsonify({'status': 'error', 'message': 'Image index out of range'}), 404
@@ -390,19 +391,148 @@ def delete_image(listing_id, image_index):
 @bp.route('/api/listings/<int:id>', methods=['DELETE'])
 def delete_listing(id):
     # Retrieve the specific item by ID
-    item = Item.query.get(id)
+    try:
+        item = Item.query.get(id)
 
-    db.session.delete(item)
-    db.session.commit()
-    return jsonify({
-        "status": "success", 
-        "message": "Listing deleted successfully"
-    }), 200
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify({
+            "status": "success", 
+            "message": "Listing deleted successfully"
+        }), 200
+    except Exception:
+        return jsonify({
+            "status": "error", 
+            "message": "Unauthorized or listing not found"
+        }), 404
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify({
+            "status": "success", 
+            "message": "Listing deleted successfully"
+        }), 200
+    except Exception:
+        return jsonify({
+            "status": "error", 
+            "message": "Unauthorized or listing not found"
+        }), 404
 
-    return jsonify({
-        "status": "error", 
-        "message": "Unauthorized or listing not found"
-    }), 404
+
+@bp.route('/api/conversations', methods=['POST'])
+def create_conversation():
+    try:
+        data = request.get_json()
+        user_ids = data.get('user_ids')
+        item_id = data.get('item_id')
+
+        if not user_ids or len(user_ids) != 2:
+            return jsonify({'status': 'error', 'message': 'Exactly two users required'}), 400
+        
+        if not item_id:
+            return jsonify({'status': 'error', 'message': 'item_id is required'}), 400
+
+        item = Item.query.get(item_id)
+        if not item:
+            return jsonify({'status': 'error', 'message': 'Item not found'}), 404
+
+        new_conversation = Conversation(
+            item_id=item_id,
+            created_at=datetime.utcnow(),
+            last_message='',
+            last_message_timestamp=None
+        )
+        db.session.add(new_conversation)
+        db.session.commit()
+
+        participants = [
+            ConversationParticipant(user_id=uid, conversation_id=new_conversation.id) for uid in user_ids
+        ]
+        db.session.bulk_save_objects(participants)
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'conversation': new_conversation.to_dict()
+        }), 201
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+    
+@bp.route('/api/conversations/<int:user_id>', methods=['GET'])
+def get_conversations(user_id):
+    try:
+        conversations = (
+            db.session.query(Conversation)
+            .join(ConversationParticipant)
+            .filter(ConversationParticipant.user_id == user_id)
+            .all()
+        )
+        return jsonify({
+            'status': 'success',
+            'conversations': [conv.to_dict() for conv in conversations]
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@bp.route('/api/conversations/<int:conversation_id>/messages', methods=['GET'])
+def get_messages(conversation_id):
+    try:
+        messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.created_at).all()
+        return jsonify({
+            'status': 'success',
+            'messages': [msg.to_dict() for msg in messages]
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+# Socket.IO Event Handlers
+
+@socketio.on('join_conversation')
+def handle_join_conversation(data):
+    try:
+        conversation_id = data['conversation_id']
+        join_room(conversation_id)
+        emit('user_joined', {'conversation_id': conversation_id}, room=conversation_id)
+    except Exception as e:
+        emit('error', {'message': str(e)})
+
+@socketio.on('send_message')
+def handle_send_message(data):
+    try:
+        conversation_id = data['conversation_id']
+        user_id = data['user_id']
+        content = data['content']
+
+        # Create new message
+        new_message = Message(
+            conversation_id=conversation_id,
+            sender_id=user_id,
+            content=content,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(new_message)
+        db.session.commit()
+
+        # Update conversation table with new message
+        conversation = Conversation.query.get(conversation_id)
+        conversation.last_message = content
+        conversation.last_message_timestamp = datetime.utcnow()
+        db.session.commit()
+
+        # Emit via WebSocket
+        message_data = new_message.to_dict()
+        emit('receive_message', message_data, room=conversation_id)
+    except Exception as e:
+        emit('error', {'message': str(e)})
 
 @bp.route('/api/profile/rate', methods=['POST'])
 def write_rating():
@@ -575,3 +705,63 @@ def remove_favorite(user_id, item_id):
             'status': 'error',
             'message': str(e)
         }), 500
+
+
+@bp.route('/api/profile/rating/<username>', methods=['GET'])
+def read_rating(username):
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found'
+        }), 404
+
+    user_rating = user.rating
+
+    return jsonify({
+        'status': 'success',
+        'user_rating': user_rating
+    }), 200
+
+####################################DEBUGGING############################
+@bp.route('/api/debug/users', methods=['GET'])
+def debug_users():
+    users = User.query.all()
+    user_list = [{
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'full_name': user.full_name,  # Added full_name to debug output
+        'verified': user.verified,
+        'is_admin': user.is_admin,
+        'description': user.description,  # Added description to debug output
+        'joined_on': user.joined_on
+    } for user in users]
+    
+    return jsonify({
+        'user_count': len(user_list),
+        'users': user_list
+    })
+
+# Add a route to check specific user profile
+@bp.route('/api/debug/profile/<username>', methods=['GET'])
+def debug_profile(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found'
+        }), 404
+        
+    return jsonify({
+        'id': user.id,
+        'username': user.username,
+        'full_name': user.full_name,
+        'email': user.email,
+        'verified': user.verified,
+        'is_admin': user.is_admin,
+        'description': user.description,
+        'rating': user.rating,
+        'rating_count': user.rating_count
+    })
