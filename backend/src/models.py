@@ -78,7 +78,7 @@ class Item(db.Model):
     # Add a relationship to reference the user (seller)
     seller = db.relationship('User', backref='items')
     favorited_by = db.relationship('User', secondary='favorites', lazy='dynamic')
-
+    #hello world
 
     def to_dict(self):
         return {
