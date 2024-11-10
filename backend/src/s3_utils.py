@@ -1,8 +1,7 @@
 import boto3
-import os
-from dotenv import load_dotenv
 import uuid
 
+# TO-DO: Figure out way to store keys & tokens
 AWS_ACCESS_KEY_ID = 'AKIASDRANCKCVV52NGGU'
 AWS_SECRET_ACCESS_KEY = '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'
 AWS_REGION ='us-east-2'
@@ -35,3 +34,4 @@ def upload_to_s3(image_data, content_type):
         return url
     except Exception as e:
         raise Exception(f"S3 upload error: {str(e)}")
+    

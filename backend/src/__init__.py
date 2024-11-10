@@ -24,7 +24,7 @@ def create_app():
 
         # Initialize database
         db.init_app(app)
-        db.drop_all()
+
         db.create_all()
         
         # Check if admin user exists, if not create it
