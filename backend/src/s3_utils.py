@@ -31,7 +31,7 @@ def upload_to_s3(image_data, content_type):
         )
         
         # Generate URL
-        url = f"https://{bucket_name}.s3.{os.getenv('AWS_REGION')}.amazonaws.com/{filename}"
+        url = f"https://{bucket_name}.s3.{AWS_REGION}.amazonaws.com/{filename}"
         return url
     except Exception as e:
         raise Exception(f"S3 upload error: {str(e)}")
