@@ -15,9 +15,8 @@ const useMessages = (conversationId) => {
             if (!response.ok) {
                 throw new Error('Failed to fetch messages');
             }
-            const data = await response.json();
 
-            // Add isMine to each message
+            const data = await response.json();
             const messagesWithIsMine = data.messages.map((message) => ({
                 ...message,
                 isMine: message.user_id === currentUser.id, // Compare the message sender's user_id with the current user's ID
@@ -31,7 +30,6 @@ const useMessages = (conversationId) => {
         }
     }, [conversationId, currentUser]);
 
-    // Function to send a new message
     const sendMessage = useCallback(async (text) => {
         try {
             const response = await fetch(`/api/conversations/${conversationId}/messages`, {
@@ -41,18 +39,18 @@ const useMessages = (conversationId) => {
                 },
                 body: JSON.stringify({ text }),
             });
+
             if (!response.ok) {
                 throw new Error('Failed to send message');
             }
-            const newMessage = await response.json();
 
-            // Add isMine to the new message
-            const newMessageWithIsMine = {
+            const newMessage = await response.json();
+            const isMineMessage = {
                 ...newMessage.message,
                 isMine: newMessage.message.user_id === currentUser.id,
             };
 
-            setMessages((prevMessages) => [...prevMessages, newMessageWithIsMine]);
+            setMessages((prevMessages) => [...prevMessages, isMineMessage]);
         } catch (err) {
             setError(err.message);
         }
@@ -60,23 +58,19 @@ const useMessages = (conversationId) => {
 
     useEffect(() => {
         setCurrentUser(JSON.parse(localStorage.getItem('user')))
-        // Fetch initial messages when the component mounts
         fetchMessages();
 
-        // WebSocket message event listener
         socket.onmessage = (event) => {
             const newMessage = JSON.parse(event.data);
             if (newMessage.conversation_id === conversationId) {
-                // Add isMine to the new message received via WebSocket
-                const newMessageWithIsMine = {
+                const isMineMessage = {
                     ...newMessage,
                     isMine: newMessage.user_id === currentUser.id,
                 };
-                setMessages((prevMessages) => [...prevMessages, newMessageWithIsMine]);
+                setMessages((prevMessages) => [...prevMessages, isMineMessage]);
             }
         };
 
-        // Close WebSocket on cleanup
         return () => {
             socket.close();
         };

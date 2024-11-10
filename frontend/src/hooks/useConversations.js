@@ -5,7 +5,6 @@ const useConversations = (userId) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Function to fetch conversations
     const fetchConversations = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -13,6 +12,7 @@ const useConversations = (userId) => {
             if (!response.ok) {
                 throw new Error('Failed to fetch conversations');
             }
+            
             const data = await response.json();
             setConversations(data.conversations);
         } catch (err) {
@@ -23,7 +23,6 @@ const useConversations = (userId) => {
     }, []);
 
     useEffect(() => {
-        // Fetch conversations when the hook mounts
         fetchConversations();
     }, [fetchConversations]);
 

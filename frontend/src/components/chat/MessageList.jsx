@@ -8,7 +8,7 @@ const MessageList = ({ messages }) => {
             messagesEndRef.current.scrollIntoView();
         }
     }, [messages]);
-    
+
     return (
         <div className="message-list p-4 overflow-y-auto space-y-2 relative bottom-20 mt-40">
             {messages.map((message) => (
