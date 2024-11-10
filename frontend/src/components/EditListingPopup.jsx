@@ -265,16 +265,21 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
                     onChange={(e) => setPrice(e.target.value)} 
                     sx={{ mb: 2 }}  // Add margin-bottom for spacing
                 />
-                <FormControl 
-                    fullWidth 
-                    margin="normal" 
-                    required
-                    sx={{ mb: 2 }}>
-                    <InputLabel>Location</InputLabel>
-                    <Select value={location} onChange={(e) => setLocation(e.target.value)}>
-                        {LOCATIONS.map(loc => <MenuItem key={loc} value={loc}>{loc}</MenuItem>)}
-                    </Select>
-                </FormControl>
+                        <FormControl
+                            fullWidth
+                            margin="normal"
+                            required
+                            sx={{ mb: 2 }}>
+                            <InputLabel>Location</InputLabel>
+                            <Select
+                                multiple
+                                value={Array.isArray(location) ? location : []}
+                                onChange={(e) => setLocation(e.target.value)}
+                                renderValue={(selected) => selected.join(', ')}
+                            >
+                                {LOCATIONS.map(loc => <MenuItem key={loc} value={loc}>{loc}</MenuItem>)}
+                            </Select>
+                        </FormControl>
                 <TextField 
                     label="Description" 
                     fullWidth 
