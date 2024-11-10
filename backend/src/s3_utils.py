@@ -39,7 +39,7 @@ def upload_to_s3(image_data, content_type):
 def delete_image_from_s3(image_url):
     try:
         url_base = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/"
-        filename = image_url[len(url_base) + 1:]
+        filename = image_url[len(url_base):]
         
         # Delete the object
         s3_client.delete_object(
