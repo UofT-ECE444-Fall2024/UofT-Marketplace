@@ -42,12 +42,7 @@ def register():
     db.session.add(new_user)
     db.session.commit()
     
-    user_data = {
-        'username': username,
-        'full_name': full_name,
-        'verified': False,
-        'description': ''
-    }
+    user_data = new_user.to_dict()
     
     return jsonify({
         'status': 'success',
@@ -173,7 +168,7 @@ def get_listings():
         if condition_query:
             # Split the comma-separated string into a list and filter using `in_`
             conditions = condition_query.split(',')
-            # filters.append(Item.condition.in_(conditions))
+            filters.append(Item.condition.in_(conditions))
 
         if location_query:
             # Split the comma-separated string into a list and filter using `in_`

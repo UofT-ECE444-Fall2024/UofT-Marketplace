@@ -43,18 +43,6 @@ class User(db.Model):
             'joined_on': self.joined_on
         }
     
-    def to_dict(self):
-        return {
-            'id': self.id,
-            'username': self.username,
-            'password_hash': self.password_hash,
-            'full_name': self.full_name,
-            'email': self.email,
-            'verified': self.verified,
-            'description': self.description,
-            'is_admin': self.is_admin
-        }
-    
 """
 1. Items Table: This table stores information about items listed for sale.
 
@@ -106,15 +94,7 @@ class Item(db.Model):
             'created_at': self.created_at,
             'updated_at': self.updated_at,
             'favorite_count': len(self.favorites),
-            'seller': {
-                'id': self.seller.id,
-                'username': self.seller.username,
-                'full_name': self.seller.full_name,
-                'email': self.seller.email,
-                'description': self.seller.description,
-                'verified': self.seller.verified,
-                'joined_on': self.seller.joined_on,
-            },
+            'seller': self.seller.to_dict(),
             'images': [img.image_url for img in self.images]
         }
 
@@ -138,5 +118,5 @@ class Favorite(db.Model):
     __table_args__ = (db.UniqueConstraint('user_id', 'item_id'),)
     
     # Relationships
-    user = db.relationship('User', backref=db.backref('favorites', lazy=True))
-    item = db.relationship('Item', backref=db.backref('favorites', lazy=True))
+    user = db.relationship('User', backref=db.backref('favorites', lazy=True, overlaps="favorited_by"), overlaps="favorited_by")
+    item = db.relationship('Item', backref=db.backref('favorites', lazy=True, overlaps="favorited_by"), overlaps="favorited_by")
