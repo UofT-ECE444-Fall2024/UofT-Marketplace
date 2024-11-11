@@ -70,7 +70,7 @@ You may have to restart VS Code for the squiggly lines to go away.
 ## NOTES
 Needed to manually install dev depencies for `react-calendar-month-view`; not sure why but should fix eventually.
 
-Also, if you add a field to an Airtable record, make sure to add it's default to `api/defaults.py`. Otherwise, our API requests will just ignore that field.
+Also, if you add a field to an Airtable record, make sure to add it's default to `api/defaults.py`. Otherwise, our API requests will just ignore that field!
 
 
 [![Open in Visual Studio Code](https://classroom.github.com/assets/open-in-vscode-2e0aaae1b6195c2367325f4f02e2d04e9abb55f0b24a779b69b11b9e10269abc.svg)](https://classroom.github.com/online_ide?assignment_repo_id=15973525&assignment_repo_type=AssignmentRepo)
