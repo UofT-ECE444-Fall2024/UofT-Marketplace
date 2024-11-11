@@ -1,5 +1,6 @@
 import boto3
 import uuid
+from urllib.parse import urlparse
 
 # TO-DO: Figure out way to store keys & tokens
 AWS_ACCESS_KEY_ID = 'AKIASDRANCKCVV52NGGU'
@@ -34,4 +35,21 @@ def upload_to_s3(image_data, content_type):
         return url
     except Exception as e:
         raise Exception(f"S3 upload error: {str(e)}")
+
+def delete_image_from_s3(image_url):
+    try:
+        url_base = f"https://{AWS_BUCKET_NAME}.s3.{AWS_REGION}.amazonaws.com/"
+        filename = image_url[len(url_base):]
+        
+        # Delete the object
+        s3_client.delete_object(
+            Bucket=AWS_BUCKET_NAME,
+            Key=filename
+        )
+        
+        return True, "Image deleted successfully"
+        
+    except Exception as e:
+        error_message = f"Error deleting image: {str(e)}"
+        return False, error_message
     
