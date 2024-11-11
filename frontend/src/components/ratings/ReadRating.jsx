@@ -11,7 +11,7 @@ const ReadRating = ({username, fullname, verified, joinedOn}) => {
     const [rating, setRating] = useState(0);
 
     useEffect(() => {
-        fetch(`http://localhost:5001/api/profile/rating/${username}`)
+        fetch(`/api/profile/rating/${username}`)
             .then(response => response.json())
             .then(data => {
                 setRating(data.user_rating)
