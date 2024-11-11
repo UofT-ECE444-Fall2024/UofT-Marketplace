@@ -60,3 +60,4 @@ def test_create_conversation(client):
 
     response = client.get('/api/conversations/1/messages', json=test_user_1)
     assert response.status_code == 200
+    
