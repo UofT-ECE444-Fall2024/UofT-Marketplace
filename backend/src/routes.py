@@ -179,7 +179,7 @@ def get_listings():
 
         if date_listed_query:
             # Calculate date threshold based on days since listed
-            days_threshold = datetime.now() - timedelta(days=int(date_listed_query))
+            days_threshold = datetime.utcnow() - timedelta(days=int(date_listed_query))
             filters.append(Item.created_at >= days_threshold)
 
         if min_price_query:
@@ -439,7 +439,7 @@ def create_conversation():
 
         new_conversation = Conversation(
             item_id=item_id,
-            created_at=datetime.now(),
+            created_at=datetime.utcnow(),
             last_message='',
             last_message_timestamp=None
         )
@@ -529,7 +529,7 @@ def handle_send_message(data):
             conversation_id=conversation_id,
             sender_id=user_id,
             content=content,
-            created_at=datetime.now()
+            created_at=datetime.utcnow()
         )
         db.session.add(new_message)
         db.session.commit()
@@ -537,14 +537,13 @@ def handle_send_message(data):
         # Update conversation table with new message
         conversation = Conversation.query.get(conversation_id)
         conversation.last_message = content
-        conversation.last_message_timestamp = datetime.now()
+        conversation.last_message_timestamp = datetime.utcnow()
         db.session.commit()
 
         # Emit via WebSocket
         message_data = new_message.to_dict()
         emit('receive_message', message_data, room=conversation_id)
     except Exception as e:
-        print("UHOH")
         emit('error', {'message': str(e)})
 
 @bp.route('/api/profile/rate', methods=['POST'])
