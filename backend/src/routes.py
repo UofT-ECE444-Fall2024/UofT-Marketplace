@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 from src.models import db, User, Item, ItemImage, Favorite, Conversation, ConversationParticipant, Message
 from src.search_algorithm import search_algorithm
+from src.s3_utils import upload_to_s3
 from sqlalchemy import and_, desc
 from flask_socketio import emit, join_room
 from datetime import datetime, timedelta
@@ -42,16 +43,8 @@ def register():
     
     db.session.add(new_user)
     db.session.commit()
-
-    user = User.query.filter_by(username=username).first()
     
-    user_data = {
-        'id': user.id,
-        'username': username,
-        'full_name': full_name,
-        'verified': False,
-        'description': ''
-    }
+    user_data = new_user.to_dict()
     
     return jsonify({
         'status': 'success',
@@ -133,10 +126,11 @@ def create_listing():
             content_type = image_parts[0].split(':')[1].split(';')[0]
             binary_data = base64.b64decode(image_parts[1])
             
+            image_url = upload_to_s3(binary_data, content_type)
+
             new_image = ItemImage(
                 item=new_item,
-                image_data=binary_data,
-                content_type=content_type
+                image_url=image_url
             )
             db.session.add(new_image)
         
@@ -176,7 +170,7 @@ def get_listings():
         if condition_query:
             # Split the comma-separated string into a list and filter using `in_`
             conditions = condition_query.split(',')
-            # filters.append(Item.condition.in_(conditions))
+            filters.append(Item.condition.in_(conditions))
 
         if location_query:
             # Split the comma-separated string into a list and filter using `in_`
@@ -223,8 +217,7 @@ def get_listings():
             # Add the image if it exists
             first_image = item.images[0] if item.images else None
             if first_image:
-                image_b64 = base64.b64encode(first_image.image_data).decode('utf-8')
-                item_data['image'] = f'data:{first_image.content_type};base64,{image_b64}'
+                item_data['image'] = first_image.image_url
             else:
                 item_data['image'] = None
                 
@@ -258,8 +251,7 @@ def get_items_by_user(user_id):
             # Add the image if it exists
             first_image = item.images[0] if item.images else None
             if first_image:
-                image_b64 = base64.b64encode(first_image.image_data).decode('utf-8')
-                item_data['image'] = f'data:{first_image.content_type};base64,{image_b64}'
+                item_data['image'] = first_image.image_url
             else:
                 item_data['image'] = None
                 
@@ -296,9 +288,7 @@ def get_listing(id):
 
         # Loop through all the images
         for image in item.images:
-            # Encode each image to base64
-            image_b64 = base64.b64encode(image.image_data).decode('utf-8')
-            image_list.append(f'data:{image.content_type};base64,{image_b64}')
+            image_list.append(image.image_url)
 
         # Add the list of images to the item_data
         item_data['images'] = image_list if image_list else None
@@ -592,8 +582,7 @@ def get_favorites(user_id):
             # Add the image if it exists
             first_image = fav.item.images[0] if fav.item.images else None
             if first_image:
-                image_b64 = base64.b64encode(first_image.image_data).decode('utf-8')
-                item_data['image'] = f'data:{first_image.content_type};base64,{image_b64}'
+                item_data['image'] = first_image.image_url
             else:
                 item_data['image'] = None
                 

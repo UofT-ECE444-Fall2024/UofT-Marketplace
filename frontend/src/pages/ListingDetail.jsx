@@ -35,7 +35,7 @@ function ListingDetail() {
 
   const fetchListingDetail = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/listings/${id}`); // Fetch details for the specific listing
+      const response = await fetch(`/api/listings/${id}`); // Fetch details for the specific listing
       if (!response.ok) {
         throw new Error('Failed to fetch listing details');
       }
@@ -56,7 +56,7 @@ function ListingDetail() {
         throw new Error('Not logged in');
       }
 
-      const response = await fetch(`http://localhost:5001/api/profile/${storedUser.username}`);
+      const response = await fetch(`/api/profile/${storedUser.username}`);
       const data = await response.json();
       
       if (response.ok) {
@@ -87,7 +87,7 @@ function ListingDetail() {
 
   const handleDelete = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/listings/${id}`, { method: 'DELETE' });
+      const response = await fetch(`/api/listings/${id}`, { method: 'DELETE' });
       if (response.ok) {
         navigate('/listings');
       }

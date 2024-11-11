@@ -11,3 +11,5 @@ SQLAlchemy==2.0.35
 Flask-SQLAlchemy
 Flask-Cors
 Flask-SocketIO
+boto3
+gunicorn

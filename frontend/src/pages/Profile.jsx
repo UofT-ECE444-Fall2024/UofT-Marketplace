@@ -68,7 +68,7 @@ const Profile = () => {
         throw new Error('Not logged in');
       }
 
-      const response = await fetch(`http://localhost:5001/api/profile/${storedUser.username}`);
+      const response = await fetch(`/api/profile/${storedUser.username}`);
       const data = await response.json();
 
       if (response.ok) {
