@@ -157,7 +157,7 @@ def get_listings():
     min_price_query = request.args.get("minPrice")
     max_price_query = request.args.get("maxPrice")
     sort_by_query = request.args.get("sortBy")
-
+    category_query = request.args.get("category")
     try:
         # Initialize the base query
         query = Item.query
