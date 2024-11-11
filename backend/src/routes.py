@@ -236,7 +236,7 @@ def get_listings():
 def get_items_by_user(user_id):
 
     if not user_id:
-        return jsonify({'error': 'user_id is required'}), 400
+        return jsonify({'error': 'user_id is required'}), 404
     
     try:
         items = Item.query.filter_by(user_id=user_id).all()
@@ -270,7 +270,7 @@ def get_items_by_user(user_id):
 def get_listing(id):
     try:
         # Retrieve the specific item by ID
-        item = Item.query.get(id)
+        item = db.session.get(Item, id)
 
         if item is None:
             return jsonify({
@@ -308,7 +308,7 @@ def update_listing(id):
         data = request.json
 
         # Retrieve the existing item by ID
-        item = Item.query.get(id)
+        item = db.session.get(Item, id)
 
         if not item:
             return jsonify({
@@ -383,7 +383,7 @@ def delete_image(listing_id, image_index):
 @bp.route('/api/listings/<int:id>', methods=['DELETE'])
 def delete_listing(id):
     # Retrieve the specific item by ID
-    item = Item.query.get(id)
+    item = db.session.get(Item, id)
 
     db.session.delete(item)
     db.session.commit()
