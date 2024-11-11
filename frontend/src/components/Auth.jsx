@@ -40,7 +40,7 @@ const Auth = () => {
     <Container maxWidth="sm" className="mt-16">
       <Paper elevation={3} className="p-8">
         <Box className="flex flex-col items-center gap-6">
-          <Typography variant="h3" className="font-bold">Name of App</Typography>
+          <Typography variant="h3" className="font-bold">UofT Marketplace</Typography>
           {status.success && <Alert severity="success" className="w-full">{status.success}</Alert>}
           <Typography variant="h5">Login</Typography>
           {status.error && <Alert severity="error" className="w-full">{status.error}</Alert>}

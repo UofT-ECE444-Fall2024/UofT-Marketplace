@@ -29,7 +29,6 @@ export default function Navbar() {
 
   const navItems = [
     { name: 'Home', to: '/home' },
-    { name: 'Search', to: '/search' },
     { name: 'Chat', to: '/chat' },
     { name: 'Profile', to: '/profile' },
   ];
@@ -44,7 +43,7 @@ export default function Navbar() {
                   to="/home" 
                   className="text-2xl font-bold text-blue-600 transition-colors duration-300 hover:text-blue-800"
                 >
-                  Logo
+                  UofT Marketplace
                 </Link>
               </div>
               <div className="hidden md:flex space-x-4">
