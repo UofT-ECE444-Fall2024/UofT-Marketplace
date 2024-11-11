@@ -19,8 +19,9 @@ class User(db.Model):
     joined_on = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Rating attributes
-    rating = db.Column(db.Float, nullable=False)
-    rating_count = db.Column(db.Integer, nullable=False)
+    rating = db.Column(db.Float, nullable=False, default=0.0)
+    rating_count = db.Column(db.Integer, nullable=False, default=0)
+
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

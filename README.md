@@ -13,6 +13,7 @@ This version of the website is built using Flask and React, orchestrated with Do
 * MaterialUI Library: https://mui.com/
 * Tailwind: https://tailwindcss.com/
 * Docker: https://www.docker.com/
+* Amazon S3: https://aws.amazon.com/s3/
 
 ## Setup
 * Install Python3.9
