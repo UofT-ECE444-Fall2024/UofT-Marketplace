@@ -21,7 +21,7 @@ const WriteRating = ({username, fullname}) => {
                 "rating": rating
             })
         };
-        fetch('http://localhost:5001/api/profile/rate', request)
+        fetch('/api/profile/rate', request)
           .then(response => alert("Success: Your rating was submitted"))
           .catch(error => alert("Failed to submit rating"));
     }
