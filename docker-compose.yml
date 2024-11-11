@@ -1,18 +1,18 @@
-version: '3'  # or the appropriate version
+version: '3' # or the appropriate version
 
 services:
   backend:
     container_name: boba-backend
-    command: ["gunicorn", "app:app", "--workers=2", "--bind=0.0.0.0:5000"]
+    command: [ "gunicorn", "app:app", "--workers=2", "--bind=0.0.0.0:5000" ]
     build: ./backend
     environment:
-      - FLASK_APP=src:create_app 
-      - FLASK_ENV=production 
+      - FLASK_APP=src:create_app
+      - FLASK_ENV=production
     ports:
       - '5000:5000'
   frontend:
     container_name: boba-frontend
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile.prod
     ports:
