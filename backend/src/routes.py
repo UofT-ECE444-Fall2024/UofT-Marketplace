@@ -397,7 +397,11 @@ def delete_image(listing_id, image_index):
 def delete_listing(id):
     try:
         # Retrieve the specific item by ID
-        item = Item.query.get(id)
+        item = db.session.get(Item, id)
+
+        # Remove images from S3
+        for image in item.images:
+            delete_image_from_s3(image.image_url)
 
         db.session.delete(item)
         db.session.commit()
@@ -405,10 +409,11 @@ def delete_listing(id):
             "status": "success", 
             "message": "Listing deleted successfully"
         }), 200
-    except Exception:
+    except Exception as e:
+
         return jsonify({
             "status": "error", 
-            "message": "Unauthorized or listing not found"
+            "message": "Unauthorized or listing not found: " + str(e)
         }), 404
 
 
