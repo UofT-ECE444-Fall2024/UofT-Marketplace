@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
+from sqlalchemy.dialects.postgresql import JSON
 
 db = SQLAlchemy()
 
@@ -15,6 +16,11 @@ class User(db.Model):
     verified = db.Column(db.Boolean, default=False)
     description = db.Column(db.Text, default='')
     is_admin = db.Column(db.Boolean, default=False)
+    joined_on = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Rating attributes
+    rating = db.Column(db.Float, nullable=False)
+    rating_count = db.Column(db.Integer, nullable=False)
     auth_type = db.Column(db.String(20), default='local')
 
     def set_password(self, password):
@@ -34,7 +40,10 @@ class User(db.Model):
             'email': self.email,
             'verified': self.verified,
             'description': self.description,
-            'is_admin': self.is_admin
+            'is_admin': self.is_admin,
+            'rating': self.rating,
+            'rating_count': self.rating_count,
+            'joined_on': self.joined_on
         }
     
 """
@@ -55,7 +64,6 @@ CREATE TABLE items (
     updated_at TIMESTAMP DEFAULT NOW()
 );
 """
-
 class Item(db.Model):
     __tablename__ = 'items'
     
@@ -64,7 +72,9 @@ class Item(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text)
     price = db.Column(db.Numeric(10, 2), nullable=False)
-    location = db.Column(db.String(255), nullable=False)
+    location = db.Column(JSON, nullable=False)  # Use JSON to store multiple locations
+    condition = db.Column(db.String(255), nullable=False)
+    category = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(50), default='Available')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -72,25 +82,23 @@ class Item(db.Model):
 
     # Add a relationship to reference the user (seller)
     seller = db.relationship('User', backref='items')
+    favorited_by = db.relationship('User', secondary='favorites', lazy='dynamic')
 
     def to_dict(self):
         return {
             'id': self.id,
             'title': self.title,
             'price': f'${self.price}',
-            'location': self.location,
+            'location': self.location,  # Already JSON serializable if it's a list
             'description': self.description,
+            'condition': self.condition,
+            'category': self.category,
             'status': self.status,
             'created_at': self.created_at,
             'updated_at': self.updated_at,
-            'seller': {
-                'id': self.seller.id,
-                'username': self.seller.username,
-                'full_name': self.seller.full_name,
-                'email': self.seller.email,
-                'description': self.seller.description,
-                'verified': self.seller.verified
-            }
+            'favorite_count': len(self.favorites),
+            'seller': self.seller.to_dict(),
+            'images': [img.image_url for img in self.images]
         }
 
 class ItemImage(db.Model):
@@ -98,6 +106,20 @@ class ItemImage(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
-    image_data = db.Column(db.LargeBinary, nullable=False)
-    content_type = db.Column(db.String(100), nullable=False)
+    image_url = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Favorite(db.Model):
+    __tablename__ = 'favorites'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    
+    # Add unique constraint to prevent duplicate favorites
+    __table_args__ = (db.UniqueConstraint('user_id', 'item_id'),)
+    
+    # Relationships
+    user = db.relationship('User', backref=db.backref('favorites', lazy=True, overlaps="favorited_by"), overlaps="favorited_by")
+    item = db.relationship('Item', backref=db.backref('favorites', lazy=True, overlaps="favorited_by"), overlaps="favorited_by")

@@ -9,6 +9,7 @@ import ListingsGrid from './pages/ListingsPage';
 import ListingDetail from './pages/ListingDetail';
 // import NotFound from './NotFound'; // 404 Not Found component
 import { useStytchUser } from "@stytch/react";
+import RatingTest from './components/ratings/RatingTest'
 
 const WithNavbar = ({ children }) => (
   <>
@@ -30,7 +31,8 @@ function App() {
         <Route path="/chat" element={<WithNavbar><Chat /></WithNavbar>} />
         <Route path="/profile" element={<WithNavbar><Profile /></WithNavbar>} />
         <Route path="/landing" element={<WithNavbar><Landing /></WithNavbar>} />
-
+        {/* The following route is temporary */}
+        <Route path="/rate" element={<RatingTest username="admin" fullname="Admin"/>} />
       </Routes>
     </div>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import SearchBar from "./searchbar/SearchBar"
+import SearchBar from "./SearchBar"
 import PriceFilter from './filters/PriceFilter';
 import ConditionFilter from './filters/ConditionFilter';
 import DateListedFilter from './filters/DateListedFilter';

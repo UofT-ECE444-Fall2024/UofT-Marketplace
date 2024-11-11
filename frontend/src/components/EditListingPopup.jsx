@@ -64,7 +64,7 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
     const handleDeleteImage = async () => {
         try {
             // Assuming the image is deleted successfully from the backend
-            const response = await fetch(`http://localhost:5001/api/listings/${listingData.id}/images/${currentImageIndex}`, {
+            const response = await fetch(`/api/listings/${listingData.id}/images/${currentImageIndex}`, {
                 method: 'DELETE',
             });
     
@@ -113,7 +113,7 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
         try {
             const updatedImages = images.length > listingData.images.length ? images.slice(listingData.images.length) : [];
 
-            const response = await fetch(`http://localhost:5001/api/listings/${listingData.id}`, {
+            const response = await fetch(`/api/listings/${listingData.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -265,16 +265,21 @@ function EditListingPopup({ open, onClose, onSave, listingData }) {
                     onChange={(e) => setPrice(e.target.value)} 
                     sx={{ mb: 2 }}  // Add margin-bottom for spacing
                 />
-                <FormControl 
-                    fullWidth 
-                    margin="normal" 
-                    required
-                    sx={{ mb: 2 }}>
-                    <InputLabel>Location</InputLabel>
-                    <Select value={location} onChange={(e) => setLocation(e.target.value)}>
-                        {LOCATIONS.map(loc => <MenuItem key={loc} value={loc}>{loc}</MenuItem>)}
-                    </Select>
-                </FormControl>
+                        <FormControl
+                            fullWidth
+                            margin="normal"
+                            required
+                            sx={{ mb: 2 }}>
+                            <InputLabel>Location</InputLabel>
+                            <Select
+                                multiple
+                                value={Array.isArray(location) ? location : []}
+                                onChange={(e) => setLocation(e.target.value)}
+                                renderValue={(selected) => selected.join(', ')}
+                            >
+                                {LOCATIONS.map(loc => <MenuItem key={loc} value={loc}>{loc}</MenuItem>)}
+                            </Select>
+                        </FormControl>
                 <TextField 
                     label="Description" 
                     fullWidth 

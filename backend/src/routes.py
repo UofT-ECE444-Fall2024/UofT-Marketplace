@@ -1,3 +1,9 @@
+from flask import Blueprint, jsonify, request
+from src.models import db, User, Item, ItemImage, Favorite
+from src.search_algorithm import search_algorithm
+from src.s3_utils import upload_to_s3
+from sqlalchemy import and_
+from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, redirect, session
 from src.models import db, User, Item, ItemImage
 import base64
@@ -64,47 +70,34 @@ def create_new_user(email, full_name):
         username=username,
         email=email,
         full_name=full_name,
-        verified=True,
+        email=email,
+        verified=False,
         description='',
-        is_admin=False
+        rating=0.0,
+        rating_count=0,
     )
     db.session.add(user)
     db.session.commit()
-    return user
-
-@bp.route('/authenticate')
-def authenticate():
-    token = request.args.get('token')
-    if not token:
-        return create_error_response('Authentication failed - no token provided', clear_oauth=True)
     
-    try:
-        # Authenticate with Stytch
-        response = stytch_client.oauth.authenticate(token)
-        
-        # Extract and validate email
-        token_data = decode_access_token(response.provider_values.access_token)
-        email = token_data.get('upn') or token_data.get('unique_name')
-        
-        if not email:
-            return create_error_response('Could not retrieve email from Microsoft account', clear_oauth=True)
-        
-        # Validate email domain
-        if not any(email.lower().endswith(domain) for domain in ['@mail.utoronto.ca', '@utoronto.ca']):
-            return create_error_response('Please sign in with your UToronto email address', clear_oauth=True)
-        
-        
-        # Get or create user
-        user = User.query.filter_by(email=email).first()
-        is_new_user = user is None
-        
-        if is_new_user:
-            full_name = f"{response.user.name.first_name} {response.user.name.last_name}".strip()
-            user = create_new_user(email, full_name)
-        
-        # Prepare user info
-        user_info = {
-            'user_id': str(user.id),
+    user_data = new_user.to_dict()
+    
+    return jsonify({
+        'status': 'success',
+        'message': 'Registration successful',
+        'user': user_data
+    }), 201
+
+@bp.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+    
+    user = User.query.filter_by(username=username).first()
+    
+    if user and user.check_password(password):
+        user_data = {
+            'id': user.id,
             'username': user.username,
             'name': user.full_name,
             'email': user.email,
@@ -172,7 +165,9 @@ def create_listing():
             title=data['title'],
             description=data['description'],
             price=float(data['price'].replace('$', '')),
-            location=data['location']
+            location=data['location'],
+            condition=data['condition'],
+            category=data['category']
         )
         db.session.add(new_item)
         
@@ -183,10 +178,11 @@ def create_listing():
             content_type = image_parts[0].split(':')[1].split(';')[0]
             binary_data = base64.b64decode(image_parts[1])
             
+            image_url = upload_to_s3(binary_data, content_type)
+
             new_image = ItemImage(
                 item=new_item,
-                image_data=binary_data,
-                content_type=content_type
+                image_url=image_url
             )
             db.session.add(new_image)
         
@@ -203,7 +199,7 @@ def create_listing():
         db.session.rollback()
         return jsonify({
             'status': 'error',
-            'message': error
+            'message': e
         }), 500
 
 @bp.route('/api/listings', methods=['GET'])
@@ -226,7 +222,7 @@ def get_listings():
         if condition_query:
             # Split the comma-separated string into a list and filter using `in_`
             conditions = condition_query.split(',')
-            # filters.append(Item.condition.in_(conditions))
+            filters.append(Item.condition.in_(conditions))
 
         if location_query:
             # Split the comma-separated string into a list and filter using `in_`
@@ -273,8 +269,7 @@ def get_listings():
             # Add the image if it exists
             first_image = item.images[0] if item.images else None
             if first_image:
-                image_b64 = base64.b64encode(first_image.image_data).decode('utf-8')
-                item_data['image'] = f'data:{first_image.content_type};base64,{image_b64}'
+                item_data['image'] = first_image.image_url
             else:
                 item_data['image'] = None
                 
@@ -290,6 +285,40 @@ def get_listings():
             'status': 'error',
             'message': str(e)
         }), 500
+
+@bp.route('/api/listings/user/<int:user_id>', methods=['GET'])
+def get_items_by_user(user_id):
+
+    if not user_id:
+        return jsonify({'error': 'user_id is required'}), 400
+    
+    try:
+        items = Item.query.filter_by(user_id=user_id).all()
+        listings = []
+        
+        for item in items:
+            # Get the basic item data
+            item_data = item.to_dict()
+            
+            # Add the image if it exists
+            first_image = item.images[0] if item.images else None
+            if first_image:
+                item_data['image'] = first_image.image_url
+            else:
+                item_data['image'] = None
+                
+            listings.append(item_data)
+
+        return jsonify({
+            'status': 'success',
+            'items': listings
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'error': str(e)
+            }), 500
 
 @bp.route('/api/listings/<int:id>', methods=['GET'])
 def get_listing(id):
@@ -311,9 +340,7 @@ def get_listing(id):
 
         # Loop through all the images
         for image in item.images:
-            # Encode each image to base64
-            image_b64 = base64.b64encode(image.image_data).decode('utf-8')
-            image_list.append(f'data:{image.content_type};base64,{image_b64}')
+            image_list.append(image.image_url)
 
         # Add the list of images to the item_data
         item_data['images'] = image_list if image_list else None
@@ -424,6 +451,45 @@ def delete_listing(id):
         "message": "Unauthorized or listing not found"
     }), 404
 
+@bp.route('/api/profile/rate', methods=['POST'])
+def write_rating():
+    data = request.get_json()
+    username = data.get('username')
+    rating_input = data.get('rating')
+
+    # Get user that we're writing review for from database
+    user = User.query.filter_by(username=username).first()
+
+    prev_rating = user.rating
+    rating_count = user.rating_count
+
+    # Calculate new user rating using a formula.
+    new_rating = (prev_rating*rating_count + rating_input)/(rating_count+1)
+
+    user.rating_count += 1
+    user.rating = new_rating
+
+    db.session.commit()
+
+    return {'msg': 'Rating submitted successfully.'}, 200
+
+@bp.route('/api/profile/rating/<username>', methods=['GET'])
+def read_rating(username):
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found'
+        }), 404
+
+    user_rating = user.rating
+
+    return jsonify({
+        'status': 'success',
+        'user_rating': user_rating
+    }), 200
+
 ####################################DEBUGGING############################
 @bp.route('/api/debug/users', methods=['GET'])
 def debug_users():
@@ -435,7 +501,8 @@ def debug_users():
         'full_name': user.full_name,  # Added full_name to debug output
         'verified': user.verified,
         'is_admin': user.is_admin,
-        'description': user.description  # Added description to debug output
+        'description': user.description,  # Added description to debug output
+        'joined_on': user.joined_on
     } for user in users]
     
     return jsonify({
@@ -462,3 +529,95 @@ def debug_profile(username):
         'is_admin': user.is_admin,
         'description': user.description
     })
+
+## Favorites Feature
+@bp.route('/api/favorites/<int:user_id>', methods=['GET'])
+def get_favorites(user_id):
+    try:
+        favorites = Favorite.query.filter_by(user_id=user_id).all()
+        favorite_listings = []
+        
+        for fav in favorites:
+            item_data = fav.item.to_dict()
+            # Add the image if it exists
+            first_image = fav.item.images[0] if fav.item.images else None
+            if first_image:
+                item_data['image'] = first_image.image_url
+            else:
+                item_data['image'] = None
+                
+            favorite_listings.append(item_data)
+            
+        return jsonify({
+            'status': 'success',
+            'favorites': favorite_listings
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@bp.route('/api/favorites', methods=['POST'])
+def add_favorite():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        item_id = data.get('item_id')
+        # Check if favorite already exists
+        existing_favorite = Favorite.query.filter_by(
+            user_id=user_id,
+            item_id=item_id
+        ).first()
+        
+        if existing_favorite:
+            return jsonify({
+                'status': 'error',
+                'message': 'Already in favorites'
+            }), 409
+            
+        new_favorite = Favorite(user_id=user_id, item_id=item_id)
+        db.session.add(new_favorite)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Added to favorites'
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@bp.route('/api/favorites/<int:user_id>/<int:item_id>', methods=['DELETE'])
+def remove_favorite(user_id, item_id):
+    try:
+        favorite = Favorite.query.filter_by(
+            user_id=user_id,
+            item_id=item_id
+        ).first()
+        
+        if not favorite:
+            return jsonify({
+                'status': 'error',
+                'message': 'Favorite not found'
+            }), 404
+            
+        db.session.delete(favorite)
+        db.session.commit()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Removed from favorites'
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500

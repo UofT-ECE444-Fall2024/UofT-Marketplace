@@ -5,7 +5,7 @@ PIP=pip3
 VENV_DIR=$(BACKEND_DIR)/venv
 VENV_ACTIVATE=$(VENV_DIR)/bin/activate
 FLASK_APP=$(BACKEND_DIR)/src:create_app 
-DOCKER_COMPOSE_FILE=docker-compose.yml
+DOCKER_COMPOSE_FILE=docker-compose.dev.yml
 
 .PHONY: frontend-install backend-install start frontend-start tailwind-watch backend-start clean docker-up docker-down venv create-venv
 
@@ -20,7 +20,7 @@ backend-install: create-venv
 frontend-install:
 	cd $(FRONTEND_DIR) && npm install
 
-start: frontend-start backend-start tailwind-watch
+start: docker-build docker-up tailwind-watch
 
 frontend-start:
 	cd $(FRONTEND_DIR) && npm start
@@ -31,8 +31,8 @@ backend-start:
 tailwind-watch:
 	cd $(FRONTEND_DIR) && npx tailwindcss -i ./src/index.css -o ./src/output.css --watch
 
-docker-up:
-	docker-compose -f $(DOCKER_COMPOSE_FILE) up --build -d
+docker-build:
+	docker-compose -f $(DOCKER_COMPOSE_FILE) build
 
-docker-down:
-	docker-compose -f $(DOCKER_COMPOSE_FILE) down
+docker-up:
+	docker-compose -f $(DOCKER_COMPOSE_FILE) up

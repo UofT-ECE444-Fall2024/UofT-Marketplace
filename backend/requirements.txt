@@ -1,6 +1,6 @@
 blinker==1.8.2
 click==8.1.7
-Flask==2.2.2
+Flask
 importlib_metadata==8.5.0
 itsdangerous==2.2.0
 Jinja2==3.1.4
@@ -11,3 +11,5 @@ SQLAlchemy==2.0.35
 Flask-SQLAlchemy
 Flask-Cors
 stytch==5.0.0
+boto3
+gunicorn
