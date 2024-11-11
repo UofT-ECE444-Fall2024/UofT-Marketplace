@@ -52,7 +52,7 @@ export default function Navbar() {
                 to="/home" 
                 className="text-2xl font-bold text-blue-600 transition-colors duration-300 hover:text-blue-800"
               >
-                Logo
+                UofT Marketplace
               </Link>
             </div>
             <div className="hidden md:flex items-center space-x-4">
