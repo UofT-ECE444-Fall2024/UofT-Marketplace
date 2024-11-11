@@ -1,8 +1,8 @@
 from flask import Blueprint, jsonify, request
 from src.models import db, User, Item, ItemImage, Favorite
 from src.search_algorithm import search_algorithm
+from sqlalchemy import and_, or_
 from src.s3_utils import upload_to_s3, delete_image_from_s3
-from sqlalchemy import and_
 from datetime import datetime, timedelta
 import base64
 
@@ -157,23 +157,28 @@ def get_listings():
     min_price_query = request.args.get("minPrice")
     max_price_query = request.args.get("maxPrice")
     sort_by_query = request.args.get("sortBy")
-
+    category_query = request.args.get("category")
     try:
         # Initialize the base query
         query = Item.query
 
         # Add filters based on the presence of query parameters
         filters = []
-
         if condition_query:
             # Split the comma-separated string into a list and filter using `in_`
             conditions = condition_query.split(',')
             filters.append(Item.condition.in_(conditions))
 
+
         if location_query:
-            # Split the comma-separated string into a list and filter using `in_`
             locations = location_query.split(',')
-            filters.append(Item.location.in_(locations))
+            locations = [loc.strip() for loc in locations]
+            location_filters = [Item.location.like(f'%"{loc}"%') for loc in locations]
+            filters.append(or_(*location_filters))
+
+        if category_query:
+            categories = category_query.split(',')
+            filters.append(Item.category.in_(categories))
 
         if date_listed_query:
             # Calculate date threshold based on days since listed

@@ -7,7 +7,17 @@ function ListingForm({ title, setTitle, price, setPrice, location, setLocation, 
   return (
     <Grid item xs={12} sm={6}>
       <TextField label="Title" required fullWidth margin="normal" value={title} onChange={(e) => setTitle(e.target.value)} />
-      <TextField label="Price" required fullWidth margin="normal" type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+      <TextField label="Price" required fullWidth margin="normal" inputProps={{ min: 0 }} type="number" value={price} onChange={(e) => {
+        const value = parseFloat(e.target.value);
+        if (value > 0) {
+          setPrice(e.target.value);
+        } else if (e.target.value === '') {
+          setPrice(''); // Allow empty field while typing
+        }
+      }}
+        error={price !== '' && parseFloat(price) <= 0}
+        helperText={price !== '' && parseFloat(price) <= 0 ? "Price must be greater than 0" : ""}
+      />
       <FormControl fullWidth margin="normal" required>
         <InputLabel>Location</InputLabel>
         <Select
