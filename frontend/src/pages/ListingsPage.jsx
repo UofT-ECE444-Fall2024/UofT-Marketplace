@@ -157,7 +157,7 @@ const ListingsPage = () => {
             setError(data.message || 'Error fetching listings');
           }
         });
-  }, [searchParams]);
+  }, [searchParams, listings]);
 
   return (
     <Box sx={{ display: 'flex' }}>

@@ -38,7 +38,6 @@ export default function Navbar() {
 
   const navItems = [
     { name: 'Home', to: '/home' },
-    { name: 'Search', to: '/search' },
     { name: 'Chat', to: '/chat' },
     { name: 'Profile', to: '/profile' },
   ];

@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from src.models import db, User, Item, ItemImage, Favorite
 from src.search_algorithm import search_algorithm
-from src.s3_utils import upload_to_s3
+from src.s3_utils import upload_to_s3, delete_image_from_s3
 from sqlalchemy import and_
 from datetime import datetime, timedelta
 from flask import Blueprint, jsonify, request, redirect, session
@@ -290,7 +290,7 @@ def get_listings():
 def get_items_by_user(user_id):
 
     if not user_id:
-        return jsonify({'error': 'user_id is required'}), 400
+        return jsonify({'error': 'user_id is required'}), 404
     
     try:
         items = Item.query.filter_by(user_id=user_id).all()
@@ -324,7 +324,7 @@ def get_items_by_user(user_id):
 def get_listing(id):
     try:
         # Retrieve the specific item by ID
-        item = Item.query.get(id)
+        item = db.session.get(Item, id)
 
         if item is None:
             return jsonify({
@@ -362,7 +362,7 @@ def update_listing(id):
         data = request.json
 
         # Retrieve the existing item by ID
-        item = Item.query.get(id)
+        item = db.session.get(Item, id)
 
         if not item:
             return jsonify({
@@ -383,10 +383,11 @@ def update_listing(id):
             content_type = image_parts[0].split(':')[1].split(';')[0]
             binary_data = base64.b64decode(image_parts[1])
 
+            image_url = upload_to_s3(binary_data, content_type)
+
             new_image = ItemImage(
                 item=item,
-                image_data=binary_data,
-                content_type=content_type
+                image_url=image_url
             )
             db.session.add(new_image)
 
@@ -418,7 +419,11 @@ def delete_image(listing_id, image_index):
         if image_index < 0 or image_index >= len(images):
             return jsonify({'status': 'error', 'message': 'Image index out of range'}), 404
 
+        # Remove images from db & S3
+        image = item.images[image_index]
+        delete_image_from_s3(image.image_url)
         item.images.pop(image_index)
+
         db.session.commit()
 
         return jsonify({
@@ -437,7 +442,11 @@ def delete_image(listing_id, image_index):
 @bp.route('/api/listings/<int:id>', methods=['DELETE'])
 def delete_listing(id):
     # Retrieve the specific item by ID
-    item = Item.query.get(id)
+    item = db.session.get(Item, id)
+
+    # Remove images from S3
+    for image in item.images:
+        delete_image_from_s3(image.image_url)
 
     db.session.delete(item)
     db.session.commit()
