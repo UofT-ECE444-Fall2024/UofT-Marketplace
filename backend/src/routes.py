@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from src.models import db, User, Item, ItemImage, Favorite
 from src.search_algorithm import search_algorithm
 from src.s3_utils import upload_to_s3
-from sqlalchemy import and_
+from sqlalchemy import and_, cast, JSON, or_
 from datetime import datetime, timedelta
 import base64
 
@@ -164,16 +164,21 @@ def get_listings():
 
         # Add filters based on the presence of query parameters
         filters = []
-
         if condition_query:
             # Split the comma-separated string into a list and filter using `in_`
             conditions = condition_query.split(',')
             filters.append(Item.condition.in_(conditions))
 
+
         if location_query:
-            # Split the comma-separated string into a list and filter using `in_`
             locations = location_query.split(',')
-            filters.append(Item.location.in_(locations))
+            locations = [loc.strip() for loc in locations]
+            
+            # Creates a list of LIKE filters combined with OR
+            location_filters = [Item.location.like(f'%"{loc}"%') for loc in locations]
+            # Combine location filters with OR
+            filters.append(or_(*location_filters))
+
 
         if date_listed_query:
             # Calculate date threshold based on days since listed
