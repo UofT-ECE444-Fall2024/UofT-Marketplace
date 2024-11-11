@@ -395,8 +395,8 @@ def delete_image(listing_id, image_index):
     
 @bp.route('/api/listings/<int:id>', methods=['DELETE'])
 def delete_listing(id):
-    # Retrieve the specific item by ID
     try:
+        # Retrieve the specific item by ID
         item = db.session.get(Item, id)
 
         # Remove images from S3
@@ -409,10 +409,11 @@ def delete_listing(id):
             "status": "success", 
             "message": "Listing deleted successfully"
         }), 200
-    except Exception:
+    except Exception as e:
+
         return jsonify({
             "status": "error", 
-            "message": "Unauthorized or listing not found"
+            "message": "Unauthorized or listing not found: " + str(e)
         }), 404
 
 
