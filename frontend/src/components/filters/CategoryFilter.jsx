@@ -39,6 +39,7 @@ const CategoryFilter = ({ queries, setQueries, searchAndFilterNavigate }) => {
                 disabled
                 sx={{
                     display: 'flex',
+                    alignItems: 'center',
                     bgcolor: 'background.paper',
                     color: 'text.secondary',
                     fontWeight: 'medium',
@@ -76,14 +77,14 @@ const CategoryFilter = ({ queries, setQueries, searchAndFilterNavigate }) => {
     return (
         <Box sx={{ m: 1}}>
             <FormControl fullWidth margin="normal" optional>
-                <InputLabel>Category</InputLabel>
+                <InputLabel >Category</InputLabel>
                 <Box>
                     <Select
                         multiple
                         value={selectedCategories}
                         onChange={handleCategoryChange}
                         renderValue={(selected) => (
-                            <Box >
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                                 {selected.map((category) => (
                                     <Chip
                                         key={category}

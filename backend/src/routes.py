@@ -173,12 +173,12 @@ def get_listings():
         if location_query:
             locations = location_query.split(',')
             locations = [loc.strip() for loc in locations]
-            
-            # Creates a list of LIKE filters combined with OR
             location_filters = [Item.location.like(f'%"{loc}"%') for loc in locations]
-            # Combine location filters with OR
             filters.append(or_(*location_filters))
 
+        if category_query:
+            categories = category_query.split(',')
+            filters.append(Item.category.in_(categories))
 
         if date_listed_query:
             # Calculate date threshold based on days since listed
