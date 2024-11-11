@@ -35,4 +35,4 @@ docker-build:
 	docker compose -f $(DOCKER_COMPOSE_FILE) build
 
 docker-up:
-	docker-compose -f $(DOCKER_COMPOSE_FILE) up
+	docker compose -f $(DOCKER_COMPOSE_FILE) up
