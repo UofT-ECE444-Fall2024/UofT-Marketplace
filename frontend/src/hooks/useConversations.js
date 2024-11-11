@@ -8,7 +8,7 @@ const useConversations = (userId) => {
     const fetchConversations = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`http://localhost:5001/api/conversations/${userId}`);
+            const response = await fetch(`/api/conversations/${userId}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch conversations');
             }

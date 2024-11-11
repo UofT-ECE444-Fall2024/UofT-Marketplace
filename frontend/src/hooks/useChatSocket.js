@@ -7,7 +7,12 @@ export const useChatSocket = (conversationId, userId) => {
   const [joined, setJoined] = useState(false);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:5001');
+    const newSocket = io({
+      path: '/socket.io', // Nginx handles the proxying of this path
+      transports: ['websocket'], // Ensure WebSocket transport is used
+      reconnectionAttempts: 5, // Attempt to reconnect a few times on failure
+      timeout: 10000, // 10 seconds timeout before considering the connection failed
+    });
     setSocket(newSocket);
 
     if (conversationId) {
@@ -36,7 +41,7 @@ export const useChatSocket = (conversationId, userId) => {
         newSocket.disconnect();
       };
     }
-  }, [conversationId]);
+  }, [conversationId, userId]);
 
   const sendMessage = (content, userId) => {
     if (socket) {

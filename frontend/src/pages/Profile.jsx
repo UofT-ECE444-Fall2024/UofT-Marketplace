@@ -74,7 +74,7 @@ const Profile = () => {
       if (response.ok) {
         setUserData(data.user);
         // Fetch user's items
-        const itemsResponse = await fetch(`http://localhost:5001/api/listings/user/${data.user.id}`);
+        const itemsResponse = await fetch(`/api/listings/user/${data.user.id}`);
         const itemsData = await itemsResponse.json();
 
         if (itemsResponse.ok) {

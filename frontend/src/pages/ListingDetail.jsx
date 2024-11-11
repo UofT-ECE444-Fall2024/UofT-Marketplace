@@ -116,7 +116,7 @@ function ListingDetail() {
 
   const handleOpenChat = async () => {
     try {
-      const response = await fetch(`http://localhost:5001/api/conversations`, { 
+      const response = await fetch(`/api/conversations`, { 
         method: 'POST', 
         headers: {
           'Content-Type': 'application/json',
