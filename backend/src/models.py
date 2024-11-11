@@ -42,6 +42,7 @@ class User(db.Model):
             'rating_count': self.rating_count,
             'joined_on': self.joined_on
         }
+    
 class Item(db.Model):
     __tablename__ = 'items'
     
@@ -75,15 +76,8 @@ class Item(db.Model):
             'created_at': self.created_at,
             'updated_at': self.updated_at,
             'favorite_count': len(self.favorites),
-            'seller': {
-                'id': self.seller.id,
-                'username': self.seller.username,
-                'full_name': self.seller.full_name,
-                'email': self.seller.email,
-                'description': self.seller.description,
-                'verified': self.seller.verified,
-                'joined_on': self.seller.joined_on,
-            }
+            'seller': self.seller.to_dict(),
+            'images': [img.image_url for img in self.images]
         }
 
 class ItemImage(db.Model):
@@ -91,8 +85,7 @@ class ItemImage(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
-    image_data = db.Column(db.LargeBinary, nullable=False)
-    content_type = db.Column(db.String(100), nullable=False)
+    image_url = db.Column(db.String(500), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Favorite(db.Model):
@@ -107,8 +100,8 @@ class Favorite(db.Model):
     __table_args__ = (db.UniqueConstraint('user_id', 'item_id'),)
     
     # Relationships
-    user = db.relationship('User', backref=db.backref('favorites', lazy=True))
-    item = db.relationship('Item', backref=db.backref('favorites', lazy=True))
+    user = db.relationship('User', backref=db.backref('favorites', lazy=True, overlaps="favorited_by"), overlaps="favorited_by")
+    item = db.relationship('Item', backref=db.backref('favorites', lazy=True, overlaps="favorited_by"), overlaps="favorited_by")
 
 class Conversation(db.Model):
     __tablename__ = 'conversations'
