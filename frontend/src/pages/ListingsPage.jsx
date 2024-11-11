@@ -80,8 +80,7 @@ function ListingsGrid({listings, setListings}) {
     <Box component="main" sx={{ flexGrow: 1, p: 3, padding: 5 }}>
       <Toolbar />
       <Grid container justifyContent="flex-end" sx={{ marginBottom: 3 }}>
-
-        <Grid item>
+        <Grid item sx={{ mr: 2 }}>  {/* adds margin-right of 16px */}
           <Button
             variant={showFavorites ? "contained" : "outlined"}
             color="primary"
