@@ -10,7 +10,7 @@ function ListingForm({ title, setTitle, price, setPrice, location, setLocation, 
       <TextField label="Price" required fullWidth margin="normal" inputProps={{ min: 0 }} type="number" value={price} onChange={(e) => {
         const value = parseFloat(e.target.value);
         if (value > 0) {
-          setPrice(value);
+          setPrice(e.target.value);
         } else if (e.target.value === '') {
           setPrice(''); // Allow empty field while typing
         }
