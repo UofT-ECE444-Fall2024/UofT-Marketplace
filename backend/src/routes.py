@@ -7,14 +7,13 @@ from datetime import datetime, timedelta
 import base64
 
 bp = Blueprint('main', __name__)
-mail = Mail(current_app)
 
 # Add these imports to the top of your file
-from flask_mail import Mail, Message
+from flask_mail import Message
 import random
 import string
 from datetime import datetime, timedelta
-
+from . import mail 
 # Add these configurations after creating the Blueprint
 # def init_mail(app):
    

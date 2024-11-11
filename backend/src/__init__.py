@@ -4,6 +4,9 @@ from flask import Flask
 from flask_cors import CORS
 from src.models import db, User
 from datetime import datetime
+from flask_mail import Mail
+
+mail = Mail()
 
 def create_app():
     app = Flask(__name__)
@@ -19,11 +22,11 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 465
-    app.config['MAIL_USE_TLS'] = False,
-    app.config['MAIL_USE_SSL'] = True,
-    app.config['MAIL_USERNAME'] = 'yncncontact0@gmail.com'  # Replace with your email
-    app.config['MAIL_PASSWORD'] = 'jtst ctex ylbq phgv'     # Replace with your app password
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True,
+    app.config['MAIL_USE_SSL'] = False,
+    app.config['MAIL_USERNAME'] = 'bobaverify@gmail.com'  # Replace with your email
+    app.config['MAIL_PASSWORD'] = 'ehhj zlic lvcy rlre'     # Replace with your app password
     app.config['OTP_EXPIRY_MINUTES'] = 10
     
     # Create tables and admin user
@@ -32,6 +35,7 @@ def create_app():
 
         # Initialize database
         db.init_app(app)
+        mail.init_app(app)
 
         db.create_all()
         

@@ -11,6 +11,8 @@ const Auth = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isVerified, setIsVerified] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleInputChange = (e) => {
     setFormData({
@@ -27,6 +29,7 @@ const Auth = () => {
       return;
     }
 
+    setIsLoading(true);
     try {
       const response = await fetch('/api/auth/send-otp', {
         method: 'POST',
@@ -47,12 +50,57 @@ const Auth = () => {
       }
     } catch (err) {
       setError('Failed to send OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.otp || !formData.email) {
+      setError('Both email and OTP are required');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/verify-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          otp: formData.otp
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess('OTP verified successfully!');
+        setError('');
+        setIsVerified(true);
+      } else {
+        setError(data.message || 'Invalid OTP');
+      }
+    } catch (err) {
+      setError('Failed to verify OTP. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    if (!isVerified) {
+      setError('Please verify your email with OTP first');
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -68,11 +116,14 @@ const Auth = () => {
         setSuccess('Registration successful!');
         setError('');
         // Handle successful registration (e.g., redirect to login)
+        window.location.href = '/login'; // or use router.push if using Next.js
       } else {
         setError(data.message || 'Registration failed');
       }
     } catch (err) {
       setError('Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -144,33 +195,44 @@ const Auth = () => {
               type="button"
               onClick={handleSendOTP}
               className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-              disabled={otpSent && !error}
+              disabled={isLoading || (otpSent && !error)}
             >
-              Send OTP
+              {isLoading ? 'Sending...' : 'Send OTP'}
             </button>
           </div>
         </div>
 
-        {otpSent && (
+        {otpSent && !isVerified && (
           <div>
             <label className="block text-sm font-medium mb-1">Enter OTP</label>
-            <input
-              type="text"
-              name="otp"
-              value={formData.otp}
-              onChange={handleInputChange}
-              className="w-full p-2 border rounded"
-              required
-              maxLength={6}
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                name="otp"
+                value={formData.otp}
+                onChange={handleInputChange}
+                className="flex-1 p-2 border rounded"
+                required
+                maxLength={6}
+              />
+              <button
+                type="button"
+                onClick={handleVerifyOTP}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:opacity-50"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Verifying...' : 'Verify OTP'}
+              </button>
+            </div>
           </div>
         )}
 
         <button
           type="submit"
-          className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+          disabled={!isVerified || isLoading}
         >
-          Create Account
+          {isLoading ? 'Creating Account...' : 'Create Account'}
         </button>
       </form>
     </div>
