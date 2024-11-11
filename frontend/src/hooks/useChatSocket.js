@@ -8,10 +8,10 @@ export const useChatSocket = (conversationId, userId) => {
 
   useEffect(() => {
     const newSocket = io({
-      path: '/socket.io', // Nginx handles the proxying of this path
-      transports: ['websocket'], // Ensure WebSocket transport is used
-      reconnectionAttempts: 5, // Attempt to reconnect a few times on failure
-      timeout: 10000, // 10 seconds timeout before considering the connection failed
+      path: '/socket.io', 
+      transports: ['websocket'],
+      reconnectionAttempts: 5,
+      timeout: 10000,
     });
     setSocket(newSocket);
 
