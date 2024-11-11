@@ -18,6 +18,14 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 465
+    app.config['MAIL_USE_TLS'] = False,
+    app.config['MAIL_USE_SSL'] = True,
+    app.config['MAIL_USERNAME'] = 'yncncontact0@gmail.com'  # Replace with your email
+    app.config['MAIL_PASSWORD'] = 'jtst ctex ylbq phgv'     # Replace with your app password
+    app.config['OTP_EXPIRY_MINUTES'] = 10
+    
     # Create tables and admin user
     with app.app_context():
         from src.models import db, User

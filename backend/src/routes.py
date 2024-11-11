@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, current_app
 from src.models import db, User, Item, ItemImage, Favorite
 from src.search_algorithm import search_algorithm
 from src.s3_utils import upload_to_s3, delete_image_from_s3
@@ -7,7 +7,74 @@ from datetime import datetime, timedelta
 import base64
 
 bp = Blueprint('main', __name__)
+mail = Mail(current_app)
 
+# Add these imports to the top of your file
+from flask_mail import Mail, Message
+import random
+import string
+from datetime import datetime, timedelta
+
+# Add these configurations after creating the Blueprint
+# def init_mail(app):
+   
+#     return Mail(app)
+
+# Add this to store OTPs (in production, use a database)
+otp_store = {}
+
+def generate_otp(length=6):
+    """Generate a random OTP"""
+    return ''.join(random.choices(string.digits, k=length))
+
+def send_otp_email(email, otp):
+    """Send OTP via email"""
+    try:
+        msg = Message(
+            'Email Verification OTP',
+            sender=current_app.config['MAIL_USERNAME'],
+            recipients=[email]
+        )
+        msg.body = f'Your OTP for email verification is: {otp}\nThis OTP will expire in {current_app.config["OTP_EXPIRY_MINUTES"]} minutes.'
+        mail.send(msg)
+        return True
+    except Exception as e:
+        print(f"Error sending email: {e}")
+        return False
+
+# Add these new routes
+@bp.route('/api/auth/send-otp', methods=['POST'])
+def send_verification_otp():
+    data = request.get_json()
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({
+            'status': 'error',
+            'message': 'Email is required'
+        }), 400
+
+    # Generate OTP and store it
+    otp = generate_otp()
+    expiry_time = datetime.now() + timedelta(minutes=current_app.config['OTP_EXPIRY_MINUTES'])
+    otp_store[email] = {
+        'otp': otp,
+        'expiry_time': expiry_time
+    }
+
+    # Send OTP via email
+    if send_otp_email(email, otp):
+        return jsonify({
+            'status': 'success',
+            'message': 'OTP sent successfully'
+        }), 200
+    else:
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to send OTP'
+        }), 500
+
+# Modify the existing register route
 @bp.route('/api/auth/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -15,12 +82,37 @@ def register():
     password = data.get('password')
     full_name = data.get('full_name')
     email = data.get('email')
+    submitted_otp = data.get('otp')
 
-    if not all([username, password, full_name, email]):
+    if not all([username, password, full_name, email, submitted_otp]):
         return jsonify({
             'status': 'error',
             'message': 'All fields are required'
         }), 400
+        
+    # Verify OTP
+    stored_data = otp_store.get(email)
+    if not stored_data:
+        return jsonify({
+            'status': 'error',
+            'message': 'Please request a new OTP'
+        }), 400
+
+    if datetime.now() > stored_data['expiry_time']:
+        del otp_store[email]
+        return jsonify({
+            'status': 'error',
+            'message': 'OTP has expired'
+        }), 400
+
+    if submitted_otp != stored_data['otp']:
+        return jsonify({
+            'status': 'error',
+            'message': 'Invalid OTP'
+        }), 400
+
+    # Remove used OTP
+    del otp_store[email]
         
     if User.query.filter_by(username=username).first():
         return jsonify({
@@ -32,7 +124,7 @@ def register():
         username=username,
         full_name=full_name,
         email=email,
-        verified=False,
+        verified=True,  # Set to True since email is verified
         description='',
         rating=0.0,
         rating_count=0,

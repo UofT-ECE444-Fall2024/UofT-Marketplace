@@ -1,142 +1,179 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  TextField, 
-  Button, 
-  Alert, 
-  Container, 
-  Typography, 
-  Paper,
-  Box,
-  Tab,
-  Tabs
-} from '@mui/material';
+import { useState } from 'react';
 
 const Auth = () => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(0);
   const [formData, setFormData] = useState({
     username: '',
     password: '',
     full_name: '',
-    email: ''
+    email: '',
+    otp: ''
   });
-  const [status, setStatus] = useState({ error: '', success: '' });
+  const [otpSent, setOtpSent] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleInputChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-    setStatus({ error: '', success: '' });
+  const handleSendOTP = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.email) {
+      setError('Email is required to send OTP');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/send-otp', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setSuccess('OTP sent successfully! Please check your email.');
+        setOtpSent(true);
+        setError('');
+      } else {
+        setError(data.message || 'Failed to send OTP');
+      }
+    } catch (err) {
+      setError('Failed to send OTP. Please try again.');
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const isLogin = activeTab === 0;
-    const endpoint = isLogin ? 'login' : 'register';
-
-    // Only send relevant fields for login
-    const submitData = isLogin 
-      ? { username: formData.username, password: formData.password }
-      : formData;
-
+    
     try {
-      const response = await fetch(`/api/auth/${endpoint}`, {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
-      
+
       if (response.ok) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setStatus({ error: '', success: data.message });
-        setTimeout(() => navigate('/home'), 1000);
+        setSuccess('Registration successful!');
+        setError('');
+        // Handle successful registration (e.g., redirect to login)
       } else {
-        setStatus({ error: data.message || `${isLogin ? 'Login' : 'Registration'} failed`, success: '' });
+        setError(data.message || 'Registration failed');
       }
-    } catch {
-      setStatus({ error: 'Connection error. Please try again.', success: '' });
+    } catch (err) {
+      setError('Registration failed. Please try again.');
     }
   };
 
   return (
-    <Container maxWidth="sm" className="mt-16">
-      <Paper elevation={3} className="p-8">
-        <Box className="flex flex-col items-center gap-6">
-          <Typography variant="h3" className="font-bold">Name of App</Typography>
-          
-          <Tabs value={activeTab} onChange={handleTabChange} className="w-full">
-            <Tab label="Login" />
-            <Tab label="Register" />
-          </Tabs>
+    <div className="max-w-md mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+      <h2 className="text-2xl font-bold mb-6">Create Account</h2>
+      
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+      
+      {success && (
+        <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+          {success}
+        </div>
+      )}
 
-          {status.success && <Alert severity="success" className="w-full">{status.success}</Alert>}
-          {status.error && <Alert severity="error" className="w-full">{status.error}</Alert>}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Username</label>
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
 
-          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
-            <TextField
-              name="username"
-              label="Username"
-              variant="outlined"
-              fullWidth
-              value={formData.username}
-              onChange={handleChange}
+        <div>
+          <label className="block text-sm font-medium mb-1">Password</label>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Full Name</label>
+          <input
+            type="text"
+            name="full_name"
+            value={formData.full_name}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1">Email</label>
+          <div className="flex gap-2">
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleInputChange}
+              className="flex-1 p-2 border rounded"
               required
             />
-            
-            <TextField
-              name="password"
-              label="Password"
-              type="password"
-              variant="outlined"
-              fullWidth
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-
-            {activeTab === 1 && (
-              <>
-                <TextField
-                  name="full_name"
-                  label="Full Name"
-                  variant="outlined"
-                  fullWidth
-                  value={formData.full_name}
-                  onChange={handleChange}
-                  required
-                />
-                
-                <TextField
-                  name="email"
-                  label="Email"
-                  type="email"
-                  variant="outlined"
-                  fullWidth
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </>
-            )}
-
-            <Button 
-              type="submit" 
-              variant="contained" 
-              size="large" 
-              className="mt-4"
+            <button
+              type="button"
+              onClick={handleSendOTP}
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
+              disabled={otpSent && !error}
             >
-              {activeTab === 0 ? 'Login' : 'Create Account'}
-            </Button>
-          </form>
-        </Box>
-      </Paper>
-    </Container>
+              Send OTP
+            </button>
+          </div>
+        </div>
+
+        {otpSent && (
+          <div>
+            <label className="block text-sm font-medium mb-1">Enter OTP</label>
+            <input
+              type="text"
+              name="otp"
+              value={formData.otp}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded"
+              required
+              maxLength={6}
+            />
+          </div>
+        )}
+
+        <button
+          type="submit"
+          className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Create Account
+        </button>
+      </form>
+    </div>
   );
 };
 
