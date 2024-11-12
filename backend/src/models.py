@@ -58,7 +58,7 @@ class Item(db.Model):
     location = db.Column(JSON, nullable=False)  # Use JSON to store multiple locations
     condition = db.Column(db.String(255), nullable=False)
     category = db.Column(db.String(255), nullable=False)
-    status = db.Column(db.String(50), default='available')
+    status = db.Column(db.String(50), default='Available')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     images = db.relationship('ItemImage', backref='item', lazy=True, cascade='all, delete-orphan')

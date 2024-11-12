@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
 import { useStytch } from "@stytch/react";
+import { Button } from '@mui/material';
 import { Home, Chat, Person } from '@mui/icons-material';
 
 const NavItem = ({ to, icon, onClick }) => {
@@ -64,6 +65,12 @@ export default function Navbar() {
                 {navItems.map((item) => (
                   <NavItem key={item.name} to={item.to} icon={item.icon} />
                 ))}
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 text-white bg-gray-500 rounded hover:bg-[var(--customDarkBlue)] transition-colors duration-300"
+                >
+                  Logout
+                </button>
               </div>
               <div className="md:hidden">
                 <button
