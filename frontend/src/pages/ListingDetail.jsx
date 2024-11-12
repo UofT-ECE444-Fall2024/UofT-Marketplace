@@ -12,7 +12,7 @@ function ListingDetail() {
   const { id } = useParams(); // Get the ID from the URL
 
   // user data
-  const [userData, setUserData] = useState(null);
+  const [user, setUser] = useState(null);
 
   // listing details
   const [listing, setListing] = useState(null);
@@ -25,6 +25,7 @@ function ListingDetail() {
   const [openConfirm, setOpenConfirm] = useState(false);
   const [isEditOpen, setEditOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null); // Holds the listing data to edit
+  const [available, setAvailable] = useState(null);
 
   const navigate = useNavigate();
 
@@ -60,7 +61,7 @@ function ListingDetail() {
       const data = await response.json();
       
       if (response.ok) {
-        setUserData(data.user);
+        setUser(data.user);
       } else {
         setError(data.message);
       }
@@ -100,6 +101,34 @@ function ListingDetail() {
     }
   };
 
+  // Handle changeAvailibility
+  const handleChangeAvailability = async () => {
+    try {
+      // Toggle the current availability status
+      const newStatus = available === 'available' ? 'unavailable' : 'available';
+      
+      // Send a PUT request to update the listing status
+      const response = await fetch(`/api/listings/availibility/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }), // Send the new status in the body
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Update the local state with the new availability status
+        setListing(data.item);
+        setAvailable(data.item.status); // Assuming 'status' is the field for availability
+      } else {
+        throw new Error('Failed to update availability');
+      }
+    } catch (err) {
+        setError(err.message);
+    }
+  };
+
   // Handle previous image click
   const handlePrevImage = () => {
     if (listing && listing.images) {
@@ -111,6 +140,32 @@ function ListingDetail() {
   const handleNextImage = () => {
     if (listing && listing.images) {
       setCurrentImageIndex((prevIndex) => (prevIndex < listing.images.length - 1 ? prevIndex + 1 : 0));
+    }
+  };
+
+  const handleOpenChat = async () => {
+    try {
+      const response = await fetch(`/api/conversations`, { 
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          'user_ids': [listing.seller.id, user.id],
+          'item_id': id
+        })
+      });
+  
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+  
+      navigate(`/chat/${data.conversation.id}`);
+  
+    } catch (err) {
+      setError(err);
     }
   };
 
@@ -221,12 +276,12 @@ function ListingDetail() {
 
             <hr style={{ margin: '16px 0', border: '1px solid #ccc' }} />
             <Box sx={{ marginBottom: '16px' }}>
-              <ReadRating username={listing.seller.username} fullname={listing.seller.full_name} verified={listing.seller.verified} joinedOn={listing.seller.joined_on} />
+              <ReadRating id={listing.seller.id} username={listing.seller.username} fullname={listing.seller.full_name} verified={listing.seller.verified} joinedOn={listing.seller.joined_on} />
             </Box>
 
             <CardActions sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
               {/* TO DO: connect this button to the chat function to contact seller! */}
-              {userData.username !== listing.seller.username && (
+              {user.username !== listing.seller.username && (
               <Button
                   size="small"
                   sx={{
@@ -237,51 +292,77 @@ function ListingDetail() {
                     padding: '8px 16px', // Padding
                     fontWeight: 'bold', // Bold text
                   }}
+                  onClick={handleOpenChat}
                 >           
                 Contact Seller
               </Button>
               )}
               
-              {userData.username === listing.seller.username  && (
-                <Box sx={{ mt: 2, display: 'flex', gap: 2, justifyContent: 'center', alignItems: 'center'}}>
+              {user.username === listing.seller.username  && (
+                <Box sx={{ mt: 2, display: 'flex', gap: 2, flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      gap: 2, 
+                      justifyContent: 'center', 
+                      alignItems: 'center' 
+                    }}
+                  >
+                    <Button
+                      size="small"
+                      sx={{
+                        backgroundColor: '#007BFF',
+                        color: 'white',
+                        '&:hover': { backgroundColor: '#0056b3' },
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        fontWeight: 'bold',
+                        flex: 1
+                      }}
+                      onClick={() => {
+                        setSelectedListing(listing); // listing is the data object for the item to edit
+                        setEditOpen(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                    <EditListingPopup open={isEditOpen}
+                        onClose={() => setEditOpen(false)}
+                        onSave={(updatedListing) => {setEditOpen(false);}}
+                        listingData={selectedListing}
+                      />
+                    <Button
+                      size="small"
+                      sx={{
+                        backgroundColor: 'red',
+                        color: 'white',
+                        '&:hover': { backgroundColor: '#d40000' },
+                        borderRadius: '8px',
+                        padding: '8px 16px',
+                        fontWeight: 'bold',
+                        flex: 1
+                      }}
+                      color="error"
+                      onClick={handleOpenConfirm}
+                    >
+                      Delete
+                    </Button>
+                  </Box>
                   <Button
+                    onClick={handleChangeAvailability}
                     size="small"
                     sx={{
-                      backgroundColor: '#007BFF',
+                      backgroundColor: available === 'available' ? 'error' : 'success',
                       color: 'white',
-                      '&:hover': { backgroundColor: '#0056b3' },
                       borderRadius: '8px',
                       padding: '8px 16px',
                       fontWeight: 'bold',
                       flex: 1
                     }}
-                    onClick={() => {
-                      setSelectedListing(listing); // listing is the data object for the item to edit
-                      setEditOpen(true);
-                    }}
+                    variant="contained"
+                    color={available === 'available' ? 'error' : 'success'}
                   >
-                    Edit
-                  </Button>
-                  <EditListingPopup open={isEditOpen}
-                      onClose={() => setEditOpen(false)}
-                      onSave={(updatedListing) => {setEditOpen(false);}}
-                      listingData={selectedListing}
-                    />
-                  <Button
-                    size="small"
-                    sx={{
-                      backgroundColor: 'red',
-                      color: 'white',
-                      '&:hover': { backgroundColor: '#d40000' },
-                      borderRadius: '8px',
-                      padding: '8px 16px',
-                      fontWeight: 'bold',
-                      flex: 1
-                    }}
-                    color="error"
-                    onClick={handleOpenConfirm}
-                  >
-                    Delete
+                    {available === 'available' ? 'Mark as Unavailable' : 'Mark as Available'}
                   </Button>
                 </Box>
               )}

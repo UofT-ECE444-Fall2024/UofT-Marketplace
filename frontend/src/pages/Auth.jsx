@@ -1,142 +1,127 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { StytchLogin, useStytch } from '@stytch/react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  TextField, 
-  Button, 
-  Alert, 
-  Container, 
-  Typography, 
-  Paper,
-  Box,
-  Tab,
-  Tabs
-} from '@mui/material';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(0);
-  const [formData, setFormData] = useState({
-    username: '',
-    password: '',
-    full_name: '',
-    email: ''
-  });
-  const [status, setStatus] = useState({ error: '', success: '' });
+  const client = useStytch();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const config = {
+    "products": ["otp"],
+    "otpOptions": {
+      "methods": ["email"],
+      "expirationMinutes": 5
+    }
   };
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-    setStatus({ error: '', success: '' });
+  const styles = {
+    "container": {
+      "backgroundColor": "#FFFFFF",
+      "borderColor": "#ADBCC5",
+      "borderRadius": "8px",
+      "width": "400px"
+    },
+    "colors": {
+      "primary": "#19303D",
+      "secondary": "#5C727D",
+      "success": "#0C5A56",
+      "error": "#8B1214"
+    },
+    "buttons": {
+      "primary": {
+        "backgroundColor": "#19303D",
+        "textColor": "#FFFFFF",
+        "borderColor": "#19303D",
+        "borderRadius": "4px"
+      },
+      "secondary": {
+        "backgroundColor": "#FFFFFF",
+        "textColor": "#19303D",
+        "borderColor": "#19303D",
+        "borderRadius": "4px"
+      }
+    },
+    "inputs": {
+      "backgroundColor": "#FFFFFF00",
+      "borderColor": "#19303D",
+      "borderRadius": "4px",
+      "placeholderColor": "#8296A1",
+      "textColor": "#19303D"
+    },
+    "fontFamily": "Arial",
+    "hideHeaderText": false,
+    "logo": {
+      "logoImageUrl": ""
+    }
   };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const isLogin = activeTab === 0;
-    const endpoint = isLogin ? 'login' : 'register';
-
-    // Only send relevant fields for login
-    const submitData = isLogin 
-      ? { username: formData.username, password: formData.password }
-      : formData;
-
+  const createOrUpdateUser = async (email) => {
     try {
-      const response = await fetch(`/api/auth/${endpoint}`, {
+      // Extract username from email (everything before @)
+      const username = email.split('@')[0];
+      
+      const response = await fetch('/api/auth/user', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submitData),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          username,
+          auth_type: 'stytch',
+          verified: true // Since they verified their email through Stytch
+        }),
       });
 
       const data = await response.json();
       
-      if (response.ok) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setStatus({ error: '', success: data.message });
-        setTimeout(() => navigate('/home'), 1000);
-      } else {
-        setStatus({ error: data.message || `${isLogin ? 'Login' : 'Registration'} failed`, success: '' });
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create user');
       }
-    } catch {
-      setStatus({ error: 'Connection error. Please try again.', success: '' });
+
+      // Store user data in localStorage for future use
+      localStorage.setItem('user', JSON.stringify(data.user));
+      return data.user;
+    } catch (error) {
+      console.error('Error creating/updating user:', error);
+      throw error;
+    }
+  };
+  
+  // Callbacks for authentication events
+  const callbacks = {
+    onEvent: () => {
+
+      const emailInput = document.getElementById('email-input');
+      if (!emailInput || !emailInput.value) {
+        return;
+      }
+      if (!emailInput.value.endsWith('@mail.utoronto.ca') && !emailInput.value.endsWith('@utoronto.ca')) {
+        throw new Error("Please login with your utoronto email!"); 
+      }
+      else{
+      createOrUpdateUser(emailInput.value);
+      }
+    },
+    onSuccess: () => {
+      // Navigate to home page on successful authentication
+      navigate('/home');
+    },
+    onError: (error) => {
+      console.error('Authentication error:', error);
     }
   };
 
   return (
-    <Container maxWidth="sm" className="mt-16">
-      <Paper elevation={3} className="p-8">
-        <Box className="flex flex-col items-center gap-6">
-          <Typography variant="h3" className="font-bold">Name of App</Typography>
-          
-          <Tabs value={activeTab} onChange={handleTabChange} className="w-full">
-            <Tab label="Login" />
-            <Tab label="Register" />
-          </Tabs>
-
-          {status.success && <Alert severity="success" className="w-full">{status.success}</Alert>}
-          {status.error && <Alert severity="error" className="w-full">{status.error}</Alert>}
-
-          <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4">
-            <TextField
-              name="username"
-              label="Username"
-              variant="outlined"
-              fullWidth
-              value={formData.username}
-              onChange={handleChange}
-              required
-            />
-            
-            <TextField
-              name="password"
-              label="Password"
-              type="password"
-              variant="outlined"
-              fullWidth
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
-
-            {activeTab === 1 && (
-              <>
-                <TextField
-                  name="full_name"
-                  label="Full Name"
-                  variant="outlined"
-                  fullWidth
-                  value={formData.full_name}
-                  onChange={handleChange}
-                  required
-                />
-                
-                <TextField
-                  name="email"
-                  label="Email"
-                  type="email"
-                  variant="outlined"
-                  fullWidth
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                />
-              </>
-            )}
-
-            <Button 
-              type="submit" 
-              variant="contained" 
-              size="large" 
-              className="mt-4"
-            >
-              {activeTab === 0 ? 'Login' : 'Create Account'}
-            </Button>
-          </form>
-        </Box>
-      </Paper>
-    </Container>
+    <div className="flex justify-center items-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-md p-6">
+        <h1 className="text-3xl font-bold text-center mb-8">Welcome Back</h1>
+        <StytchLogin 
+          config={config} 
+          styles={styles}
+          callbacks={callbacks} 
+        />
+      </div>
+    </div>
   );
 };
 

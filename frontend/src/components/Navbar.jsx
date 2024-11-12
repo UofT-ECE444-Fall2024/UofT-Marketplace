@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
+import { useStytch } from "@stytch/react";
 import { Home, Chat, Person } from '@mui/icons-material';
 
-const NavItem = ({ to, icon }) => {
+const NavItem = ({ to, icon, onClick }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
   
   return (
     <Link
       to={to}
+      onClick={onClick}
       className={`relative px-3 py-2 transition-colors duration-300 group ${
         isActive ? 'text-blue-900' : 'text-gray-500 hover:text-blue-900'
       }`}
@@ -26,6 +28,13 @@ const NavItem = ({ to, icon }) => {
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const stytch = useStytch();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await stytch.session.revoke();
+    navigate('/');
+  };
 
   const toggleMenu = () => setIsOpen(!isOpen);
 
@@ -45,7 +54,7 @@ export default function Navbar() {
                   to="/home" 
                   className="text-2xl font-bold text-blue-900 transition-colors duration-300 hover:text-gray-500"
                 >
-                  UofT Marketplace
+                  Bobaplace
                 </Link>
               </div>
               <div className="hidden md:flex space-x-4">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, Typography } from '@mui/material';
+import { Grid, TextField, FormControl, InputLabel, Select, MenuItem, Typography, InputAdornment } from '@mui/material';
 import CategoryDropdown from './CategoryDropdown';
 import { LOCATIONS, CONDITIONS } from '../constants.js';
 
@@ -7,16 +7,27 @@ function ListingForm({ title, setTitle, price, setPrice, location, setLocation, 
   return (
     <Grid item xs={12} sm={6}>
       <TextField label="Title" required fullWidth margin="normal" value={title} onChange={(e) => setTitle(e.target.value)} />
-      <TextField label="Price" required fullWidth margin="normal" inputProps={{ min: 0 }} type="number" value={price} onChange={(e) => {
-        const value = parseFloat(e.target.value);
-        if (value > 0) {
-          setPrice(e.target.value);
-        } else if (e.target.value === '') {
-          setPrice(''); // Allow empty field while typing
-        }
-      }}
+      <TextField
+        label="Price"
+        required
+        fullWidth
+        margin="normal"
+        type="number"
+        inputProps={{ min: 1 }}
+        value={price}
+        onChange={(e) => {
+          const value = parseFloat(e.target.value);
+          if (value > 0) {
+            setPrice(e.target.value);
+          } else if (e.target.value === '') {
+            setPrice('');
+          }
+        }}
         error={price !== '' && parseFloat(price) <= 0}
         helperText={price !== '' && parseFloat(price) <= 0 ? "Price must be greater than 0" : ""}
+        InputProps={{
+          startAdornment: <InputAdornment position="start">$</InputAdornment>,
+        }}
       />
       <FormControl fullWidth margin="normal" required>
         <InputLabel>Location</InputLabel>

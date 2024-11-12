@@ -13,35 +13,11 @@ function ListingCard({ image, title, location, price, id, isFavorite, onFavorite
 
   const handleFavoriteClick = useCallback(
     async (e) => {
-      const userId = JSON.parse(localStorage.getItem('user')).id;
       e.stopPropagation();
       const newFavoriteStatus = !favoriteStatus;
       setFavoriteStatus(newFavoriteStatus);
-      try {
-        if (newFavoriteStatus) {
-          // Send POST request to add favorite
-          await fetch('/api/favorites', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ user_id: userId, item_id: id }),
-          });
-        } else {
-          // Send DELETE request to remove favorite
-          await fetch(`/api/favorites/${userId}/${id}`, {
-            method: 'DELETE',
-          });
-        }
-        // Inform parent component of the update
-        onFavoriteUpdate(id, newFavoriteStatus);
-      } catch (error) {
-        console.error('Error updating favorite status:', error);
-        // Revert state if API request fails
-        setFavoriteStatus(!newFavoriteStatus);
-      }
-    },
-    [favoriteStatus, id, onFavoriteUpdate, userId]
+      onFavoriteUpdate(id, newFavoriteStatus); // notify parent
+    }
   );
 
   const handleCardClick = () => {
@@ -73,16 +49,34 @@ function ListingCard({ image, title, location, price, id, isFavorite, onFavorite
           }}
         />
       </Box>
-      <CardContent sx={{ textAlign: 'left' }}>
+      <CardContent 
+        sx={{
+          textAlign: 'left',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          overflow: 'hidden',
+          height: '100%' // Ensures the content area doesn’t grow beyond the card height
+        }}
+      >
         <Box display="flex" alignItems="center">
-          <Typography variant="subtitle1" component="div" fontWeight="bold" sx={{ flexGrow: 1 }}>
+          <Typography 
+            variant="subtitle1" 
+            component="div" 
+            fontWeight="bold" 
+            sx={{ flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
             {title}
           </Typography>
           <IconButton aria-label="add to favorites" onClick={handleFavoriteClick}>
             {favoriteStatus ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
           </IconButton>
         </Box>
-        <Typography variant="body2" color="text.secondary">
+        <Typography 
+          variant="body2" 
+          color="text.secondary" 
+          sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+        >
           {location}
         </Typography>
         <Typography variant="subtitle2" color="text.primary" fontWeight="bold">

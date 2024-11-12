@@ -3,24 +3,27 @@ version: '3'
 services:
   flask-middleware:
     container_name: boba-dev-backend
-    command: ["gunicorn", "app:app", "--workers=2", "--bind=0.0.0.0:5000", "--reload"]
+    command: ["gunicorn", "app:app", "--worker-class", "eventlet", "--workers=2", "--bind=0.0.0.0:5000", "--reload"]
     build: ./backend
     volumes:
       - ./backend:/app/backend
     environment:
-      - FLASK_APP=app.py 
+      - FLASK_APP=app.py
       - FLASK_ENV=development 
     ports:
       - '5000:5000'
+    mem_limit: 4g
+    memswap_limit: 5g
   react-frontend:
     container_name: boba-dev-frontend
-    command: ["npm", "start"]
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
     volumes:
       - ./frontend:/app/frontend
-      - /app/frontend/node_modules
     environment:
       - CHOKIDAR_USEPOLLING=true
       - NODE_ENV=development
     ports:
       - '3000:3000'
+    command: ["nginx", "-g", "daemon off;"] 

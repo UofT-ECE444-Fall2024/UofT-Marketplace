@@ -1,83 +1,73 @@
 from flask import Blueprint, jsonify, request
-from src.models import db, User, Item, ItemImage, Favorite
+from src.models import db, User, Item, ItemImage, Favorite, Conversation, ConversationParticipant, Message
 from src.search_algorithm import search_algorithm
-from sqlalchemy import and_, or_
+from sqlalchemy import and_, or_, desc
 from src.s3_utils import upload_to_s3, delete_image_from_s3
+from flask_socketio import emit, join_room
 from datetime import datetime, timedelta
+from src import socketio
+from flask import Blueprint, jsonify, request
+from src.models import db, User, Item, ItemImage
 import base64
+import os
+from urllib.parse import urlencode
 
 bp = Blueprint('main', __name__)
 
-@bp.route('/api/auth/register', methods=['POST'])
-def register():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    full_name = data.get('full_name')
-    email = data.get('email')
+# Add this to your routes.py file
 
-    if not all([username, password, full_name, email]):
-        return jsonify({
-            'status': 'error',
-            'message': 'All fields are required'
-        }), 400
-        
-    if User.query.filter_by(username=username).first():
-        return jsonify({
-            'status': 'error',
-            'message': 'Username already exists'
-        }), 409
-        
-    new_user = User(
-        username=username,
-        full_name=full_name,
-        email=email,
-        verified=False,
-        description='',
-        rating=0.0,
-        rating_count=0,
-    )
-    new_user.set_password(password)
-    
-    db.session.add(new_user)
-    db.session.commit()
-    
-    user_data = new_user.to_dict()
-    
-    return jsonify({
-        'status': 'success',
-        'message': 'Registration successful',
-        'user': user_data
-    }), 201
+@bp.route('/api/auth/user', methods=['POST'])
+def create_or_update_user():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        username = data.get('username')
+        auth_type = data.get('auth_type')
+        verified = data.get('verified', False)
 
-@bp.route('/api/auth/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    username = data.get('username')
-    password = data.get('password')
-    
-    user = User.query.filter_by(username=username).first()
-    
-    if user and user.check_password(password):
-        user_data = {
-            'id': user.id,
-            'username': user.username,
-            'full_name': user.full_name,
-            'verified': user.verified,
-            'description': user.description,
-            'is_admin': user.is_admin
-        }
+        if not email or not username:
+            return jsonify({
+                'status': 'error',
+                'message': 'Email and username are required'
+            }), 400
+
+        # Check if user already exists
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            # Update existing user
+            user.username = username
+            user.auth_type = auth_type
+            user.verified = verified
+        else:
+            # Create new user
+            user = User(
+                email=email,
+                username=username,
+                full_name=username,
+                auth_type=auth_type,
+                verified=verified,
+                description='',
+                rating=0.0,
+                rating_count=0,
+            )
+            db.session.add(user)
+
+        db.session.commit()
+
         return jsonify({
             'status': 'success',
-            'message': 'Login successful',
-            'user': user_data
+            'message': 'User created/updated successfully',
+            'user': user.to_dict()
         }), 200
-    else:
+
+    except Exception as e:
+        db.session.rollback()
         return jsonify({
             'status': 'error',
-            'message': 'Invalid username or password'
-        }), 401
-
+            'message': str(e)
+        }), 500
+    
 @bp.route('/api/profile/<username>', methods=['GET'])
 def get_profile(username):
     # Query the database instead of checking config
@@ -96,6 +86,42 @@ def get_profile(username):
         'user': user_data
     }), 200
 
+@bp.route('/api/profile/update', methods=['PUT'])
+def update_profile():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        full_name = data.get('full_name')
+
+        if not user_id or not full_name:
+            return jsonify({
+                'status': 'error',
+                'message': 'User ID and full name are required'
+            }), 400
+
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({
+                'status': 'error',
+                'message': 'User not found'
+            }), 404
+
+        user.full_name = full_name
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Profile updated successfully',
+            'user': user.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+        
 @bp.route('/')
 def home():
     return jsonify({"message": "Hello World!"})
@@ -145,7 +171,7 @@ def create_listing():
         db.session.rollback()
         return jsonify({
             'status': 'error',
-            'message': e
+            'message': str(e)
         }), 500
 
 @bp.route('/api/listings', methods=['GET'])
@@ -158,6 +184,7 @@ def get_listings():
     max_price_query = request.args.get("maxPrice")
     sort_by_query = request.args.get("sortBy")
     category_query = request.args.get("category")
+    availability_query = request.args.get("availability")
     try:
         # Initialize the base query
         query = Item.query
@@ -182,7 +209,7 @@ def get_listings():
 
         if date_listed_query:
             # Calculate date threshold based on days since listed
-            days_threshold = datetime.now() - timedelta(days=int(date_listed_query))
+            days_threshold = datetime.utcnow() - timedelta(days=int(date_listed_query))
             filters.append(Item.created_at >= days_threshold)
 
         if min_price_query:
@@ -190,6 +217,10 @@ def get_listings():
 
         if max_price_query:
             filters.append(Item.price <= float(max_price_query))
+        
+        if availability_query:
+            availability_statuses = availability_query.split(',')
+            filters.append(Item.status.in_(availability_statuses))
 
         # Apply all collected filters at once using `.filter(*filters)`
         if filters:
@@ -358,6 +389,40 @@ def update_listing(id):
             'message': str(e)
         }), 500
 
+@bp.route('/api/listings/availibility/<int:id>', methods=['PUT'])
+def update_availibility(id):
+    try:
+        data = request.json
+
+        # Retrieve the existing item by ID
+        item = db.session.get(Item, id)
+
+        if not item:
+            return jsonify({
+                'status': 'error',
+                'message': 'Listing not found'
+            }), 404
+
+        # Update item fields
+        item.status = data.get('status', item.status)
+
+        db.session.commit()
+
+        # Return the updated item data using the to_dict method
+        return jsonify({
+            'status': 'success',
+            'message': 'Listing availibility updated successfully',
+            'item': item.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
 @bp.route('/api/listings/<int:listing_id>/images/<int:image_index>', methods=['DELETE'])
 def delete_image(listing_id, image_index):
     try:
@@ -392,24 +457,171 @@ def delete_image(listing_id, image_index):
     
 @bp.route('/api/listings/<int:id>', methods=['DELETE'])
 def delete_listing(id):
-    # Retrieve the specific item by ID
-    item = db.session.get(Item, id)
+    try:
+        # Retrieve the specific item by ID
+        item = db.session.get(Item, id)
 
-    # Remove images from S3
-    for image in item.images:
-        delete_image_from_s3(image.image_url)
+        # Remove images from S3
+        for image in item.images:
+            delete_image_from_s3(image.image_url)
 
-    db.session.delete(item)
-    db.session.commit()
-    return jsonify({
-        "status": "success", 
-        "message": "Listing deleted successfully"
-    }), 200
+        db.session.delete(item)
+        db.session.commit()
+        return jsonify({
+            "status": "success", 
+            "message": "Listing deleted successfully"
+        }), 200
+    except Exception as e:
 
-    return jsonify({
-        "status": "error", 
-        "message": "Unauthorized or listing not found"
-    }), 404
+        return jsonify({
+            "status": "error", 
+            "message": "Unauthorized or listing not found: " + str(e)
+        }), 404
+
+
+@bp.route('/api/conversations', methods=['POST'])
+def create_conversation():
+    try:
+        data = request.get_json()
+        user_ids = data.get('user_ids')
+        item_id = data.get('item_id')
+
+        if not user_ids or len(user_ids) != 2:
+            return jsonify({'status': 'error', 'message': 'Exactly two users required'}), 400
+        
+        if not item_id:
+            return jsonify({'status': 'error', 'message': 'item_id is required'}), 400
+
+        item = Item.query.get(item_id)
+        if not item:
+            return jsonify({'status': 'error', 'message': 'Item not found'}), 404
+
+        existing_conversation = (
+            db.session.query(Conversation)
+            .join(ConversationParticipant)
+            .filter(
+                Conversation.item_id == item_id,
+                ConversationParticipant.user_id.in_(user_ids)
+            )
+            .group_by(Conversation.id)
+            .having(db.func.count(ConversationParticipant.id) == 2)
+            .first() 
+        )
+
+        if existing_conversation:
+            return jsonify({
+                'status': 'success',
+                'conversation': existing_conversation.to_dict()
+            }), 200
+
+        new_conversation = Conversation(
+            item_id=item_id,
+            created_at=datetime.utcnow(),
+            last_message='',
+            last_message_timestamp=None
+        )
+        db.session.add(new_conversation)
+        db.session.commit()
+
+        participants = [
+            ConversationParticipant(user_id=uid, conversation_id=new_conversation.id) for uid in user_ids
+        ]
+        db.session.bulk_save_objects(participants)
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'conversation': new_conversation.to_dict()
+        }), 201
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+    
+@bp.route('/api/conversations/<int:user_id>', methods=['GET'])
+def get_conversations(user_id):
+    try:
+        conversations = (
+            db.session.query(Conversation)
+            .join(ConversationParticipant)
+            .filter(ConversationParticipant.user_id == user_id)
+            .order_by(desc(Conversation.last_message_timestamp))
+            .all()
+        )
+        return jsonify({
+            'status': 'success',
+            'conversations': [conv.to_dict() for conv in conversations]
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+@bp.route('/api/conversations/<int:conversation_id>/messages', methods=['GET'])
+def get_messages(conversation_id):
+    try:
+        messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.created_at).all()
+        return jsonify({
+            'status': 'success',
+            'messages': [msg.to_dict() for msg in messages]
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@socketio.on('join_conversation')
+def handle_join_conversation(data):
+    try:
+        conversation_id = data['conversation_id']
+        user_id = data['user_id']
+        
+        join_room(conversation_id)
+        
+        messages = Message.query.filter_by(conversation_id=conversation_id).order_by(Message.created_at).all()
+        message_list = [msg.to_dict() for msg in messages]
+        
+        emit('joined', {
+            'conversation_id': conversation_id,
+            'messages': message_list
+        }, room=conversation_id)
+        
+    except Exception as e:
+        emit('error', {'message': str(e)})
+
+@socketio.on('send_message')
+def handle_send_message(data):
+    try:
+        conversation_id = data['conversation_id']
+        user_id = data['user_id']
+        content = data['content']
+
+        # Create new message
+        new_message = Message(
+            conversation_id=conversation_id,
+            sender_id=user_id,
+            content=content,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(new_message)
+        db.session.commit()
+
+        # Update conversation table with new message
+        conversation = Conversation.query.get(conversation_id)
+        conversation.last_message = content
+        conversation.last_message_timestamp = datetime.utcnow()
+        db.session.commit()
+
+        # Emit via WebSocket
+        message_data = new_message.to_dict()
+        emit('receive_message', message_data, room=conversation_id)
+    except Exception as e:
+        emit('error', {'message': str(e)})
 
 @bp.route('/api/profile/rate', methods=['POST'])
 def write_rating():
@@ -433,62 +645,6 @@ def write_rating():
 
     return {'msg': 'Rating submitted successfully.'}, 200
 
-@bp.route('/api/profile/rating/<username>', methods=['GET'])
-def read_rating(username):
-    user = User.query.filter_by(username=username).first()
-
-    if not user:
-        return jsonify({
-            'status': 'error',
-            'message': 'User not found'
-        }), 404
-
-    user_rating = user.rating
-
-    return jsonify({
-        'status': 'success',
-        'user_rating': user_rating
-    }), 200
-
-####################################DEBUGGING############################
-@bp.route('/api/debug/users', methods=['GET'])
-def debug_users():
-    users = User.query.all()
-    user_list = [{
-        'id': user.id,
-        'username': user.username,
-        'email': user.email,
-        'full_name': user.full_name,  # Added full_name to debug output
-        'verified': user.verified,
-        'is_admin': user.is_admin,
-        'description': user.description,  # Added description to debug output
-        'joined_on': user.joined_on
-    } for user in users]
-    
-    return jsonify({
-        'user_count': len(user_list),
-        'users': user_list
-    })
-
-# Add a route to check specific user profile
-@bp.route('/api/debug/profile/<username>', methods=['GET'])
-def debug_profile(username):
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return jsonify({
-            'status': 'error',
-            'message': 'User not found'
-        }), 404
-        
-    return jsonify({
-        'id': user.id,
-        'username': user.username,
-        'full_name': user.full_name,
-        'email': user.email,
-        'verified': user.verified,
-        'is_admin': user.is_admin,
-        'description': user.description
-    })
 
 ## Favorites Feature
 @bp.route('/api/favorites/<int:user_id>', methods=['GET'])
@@ -581,3 +737,100 @@ def remove_favorite(user_id, item_id):
             'status': 'error',
             'message': str(e)
         }), 500
+
+
+@bp.route('/api/profile/rating/<username>', methods=['GET'])
+def read_rating(username):
+    user = User.query.filter_by(username=username).first()
+
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found'
+        }), 404
+
+    user_rating = user.rating
+
+    return jsonify({
+        'status': 'success',
+        'user_rating': user_rating
+    }), 200
+
+@bp.route('/api/conversations/<int:conversation_id>/seller', methods=['GET'])
+def get_seller_by_conversation(conversation_id):
+    try:
+        # Fetch the conversation by ID
+        conversation = Conversation.query.get(conversation_id)
+        
+        if not conversation:
+            return jsonify({
+                'status': 'error',
+                'message': 'Conversation not found'
+            }), 404
+
+        # Retrieve the item associated with the conversation
+        item = Item.query.get(conversation.item_id)
+
+        seller = User.query.get(item.user_id)
+
+        if not item:
+            return jsonify({
+                'status': 'error',
+                'message': 'Item associated with conversation not found'
+            }), 404
+
+        # Return the user ID of the seller (owner of the item)
+        return jsonify({
+            'status': 'success',
+            'username': seller.username,
+            'fullname': seller.full_name,
+            'item_status': item.status
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+####################################DEBUGGING############################
+@bp.route('/api/debug/users', methods=['GET'])
+def debug_users():
+    users = User.query.all()
+    user_list = [{
+        'id': user.id,
+        'username': user.username,
+        'email': user.email,
+        'full_name': user.full_name,  # Added full_name to debug output
+        'verified': user.verified,
+        'is_admin': user.is_admin,
+        'description': user.description,  # Added description to debug output
+        'joined_on': user.joined_on
+    } for user in users]
+    
+    return jsonify({
+        'user_count': len(user_list),
+        'users': user_list
+    })
+
+# Add a route to check specific user profile
+@bp.route('/api/debug/profile/<username>', methods=['GET'])
+def debug_profile(username):
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({
+            'status': 'error',
+            'message': 'User not found'
+        }), 404
+        
+    return jsonify({
+        'id': user.id,
+        'username': user.username,
+        'full_name': user.full_name,
+        'email': user.email,
+        'verified': user.verified,
+        'is_admin': user.is_admin,
+        'description': user.description,
+        'rating': user.rating,
+        'rating_count': user.rating_count
+    })
