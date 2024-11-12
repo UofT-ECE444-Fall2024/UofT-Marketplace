@@ -43,6 +43,7 @@ function ListingDetail() {
       const data = await response.json();
       setListing(data.listing); // Assuming the API returns the listing in 'listing' field
       setSelectedListing(data.listing);
+      setAvailable(data.listing.status);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -105,7 +106,7 @@ function ListingDetail() {
   const handleChangeAvailability = async () => {
     try {
       // Toggle the current availability status
-      const newStatus = available === 'available' ? 'unavailable' : 'available';
+      const newStatus = available === 'Available' ? 'Unavailable' : 'Available';
       
       // Send a PUT request to update the listing status
       const response = await fetch(`/api/listings/availibility/${id}`, {
@@ -352,7 +353,7 @@ function ListingDetail() {
                     onClick={handleChangeAvailability}
                     size="small"
                     sx={{
-                      backgroundColor: available === 'available' ? 'error' : 'success',
+                      backgroundColor: available === 'Available' ? 'error' : 'success',
                       color: 'white',
                       borderRadius: '8px',
                       padding: '8px 16px',
@@ -360,9 +361,9 @@ function ListingDetail() {
                       flex: 1
                     }}
                     variant="contained"
-                    color={available === 'available' ? 'error' : 'success'}
+                    color={available === 'Available' ? 'error' : 'success'}
                   >
-                    {available === 'available' ? 'Mark as Unavailable' : 'Mark as Available'}
+                    {available === 'Available' ? 'Mark as Unavailable' : 'Mark as Available'}
                   </Button>
                 </Box>
               )}

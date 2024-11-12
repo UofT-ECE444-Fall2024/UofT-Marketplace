@@ -101,7 +101,7 @@ function ImageCarousel({ images, setImages, currentImageIndex, setCurrentImageIn
         variant="outlined"
         component="label"
         fullWidth
-        sx={{ mt: 2 }}
+        sx={{ mt: 2, color: "var(--customDarkBlue)" }}
         disabled={images.length >= 5}
       >
         Add Photo

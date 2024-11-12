@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import Paper from '@mui/material/Paper';
+import { Box } from '@mui/material';
 import InputBase from '@mui/material/InputBase';
 import IconButton from '@mui/material/IconButton';
 import SearchIcon from '@mui/icons-material/Search';
@@ -24,9 +24,18 @@ const SearchBar = ({queries, setQueries, searchAndFilterNavigate}) => {
   };
 
   return (
-    <Paper
+    <Box
       component="form"
-      sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 350, margin: '5px', marginTop: '20px' }}
+      sx={{
+        p: '2px 4px',
+        display: 'flex',
+        alignItems: 'center',
+        width: 350,
+        margin: '5px',
+        marginTop: '20px',
+        border: '1px solid #ccc',
+        borderRadius: '4px',
+      }}
     >
       <InputBase
         sx={{ ml: 1, flex: 1 }}
@@ -43,7 +52,7 @@ const SearchBar = ({queries, setQueries, searchAndFilterNavigate}) => {
       >
         <SearchIcon />
       </IconButton>
-    </Paper>
+    </Box>
   );}
 
   export default SearchBar;

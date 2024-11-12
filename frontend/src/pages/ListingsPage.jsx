@@ -5,6 +5,8 @@ import AddListingPopup from '../components/AddListingPopup';
 import SearchAndFilter from "../components/SearchAndFilter";
 import Toolbar from '@mui/material/Toolbar';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { Add as AddIcon, FavoriteBorder as FavoriteBorderIcon, Favorite as FavoriteIcon } from '@mui/icons-material';
+
 
 function ListingsGrid({listings, setListings}) {
   const [loading, setLoading] = useState(true);
@@ -82,15 +84,21 @@ function ListingsGrid({listings, setListings}) {
         <Grid item sx={{ mr: 2 }}>  {/* adds margin-right of 16px */}
           <Button
             variant={showFavorites ? "contained" : "outlined"}
-            color="primary"
+            sx={{ 
+              backgroundColor: showFavorites ? "var(--customDarkBlue)" : "transparent",
+              color: showFavorites ? 'white' : 'var(--customDarkBlue)',
+              border: showFavorites ? 'none' : `2px solid var(--customDarkBlue)`,
+             }}
             onClick={toggleFavoritesFilter}
+            startIcon={showFavorites ? <FavoriteIcon sx={{ color: "white" }} /> : <FavoriteBorderIcon />}
+
           >
             {showFavorites ? 'Show All' : 'Show Favorites'}
           </Button>
         </Grid>
         <Grid item>
-          <Button variant="contained" color="primary" onClick={handleOpenPopup}>
-            + Add Listing
+          <Button variant="contained" sx={{ color: "white", backgroundColor: "var(--customDarkBlue)" }} onClick={handleOpenPopup} startIcon={<AddIcon />}>
+            Add Listing
           </Button>
         </Grid>
       </Grid>
