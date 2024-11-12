@@ -1,64 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Container, Paper, Typography, Box, Chip, Avatar, Grid, Card,
-  CardContent, CardMedia, Rating, Divider, Tabs, Tab
+  Container, Paper, Typography, Box, Chip, Avatar, Grid,
+  CardContent, CardMedia
 } from '@mui/material';
-import { CheckCircle, Cancel, Star } from '@mui/icons-material';
+import { CheckCircle, Cancel } from '@mui/icons-material';
 import ListingCard from '../components/ListingCard';
 import Toolbar from '@mui/material/Toolbar';
-
-// Placeholder data for listings
-const MOCK_LISTINGS = [
-  {
-    id: 1,
-    title: "Vintage Camera",
-    price: "$120",
-    image: "/api/placeholder/300/200",
-    status: "active"
-  },
-  {
-    id: 2,
-    title: "Mountain Bike",
-    price: "$450",
-    image: "/api/placeholder/300/200",
-    status: "active"
-  }
-];
-
-// Placeholder data for reviews
-const MOCK_REVIEWS = [
-  {
-    id: 1,
-    reviewer: "John Doe",
-    rating: 5,
-    date: "March 15, 2024",
-    comment: "Great seller! Very responsive and item was exactly as described."
-  },
-  {
-    id: 2,
-    reviewer: "Jane Smith",
-    rating: 4,
-    date: "March 10, 2024",
-    comment: "Good transaction overall. Quick shipping."
-  }
-];
-
-const TabPanel = ({ children, value, index }) => (
-  <div hidden={value !== index} className="mt-4">
-    {value === index && children}
-  </div>
-);
 
 const Profile = () => {
   const [user, setUser] = useState(null);
   const [userItems, setUserItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState('');
 
-  // Add this function to handle name updates
   const handleNameUpdate = async () => {
     try {
       const response = await fetch('/api/profile/update', {
@@ -94,7 +50,6 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     try {
-      // Get user data from localStorage
       const storedUserData = localStorage.getItem('user');
       
       if (!storedUserData) {
@@ -104,7 +59,6 @@ const Profile = () => {
       const parsedUserData = JSON.parse(storedUserData);
       setUser(parsedUserData);
 
-      // Fetch user's items if you have the user ID
       if (parsedUserData.id) {
         const itemsResponse = await fetch(`/api/listings/user/${parsedUserData.id}`);
         const itemsData = await itemsResponse.json();
@@ -149,42 +103,42 @@ const Profile = () => {
             </Avatar>
 
             <Box className="flex flex-col items-center text-center">
-            {isEditing ? (
-    <Box className="flex items-center gap-2">
-      <input
-        type="text"
-        value={newName}
-        onChange={(e) => setNewName(e.target.value)}
-        className="px-2 py-1 border rounded text-2xl font-bold"
-        onKeyPress={(e) => e.key === 'Enter' && handleNameUpdate()}
-      />
-      <button
-        onClick={handleNameUpdate}
-        className="text-green-600 hover:text-green-700"
-      >
-        Save
-      </button>
-      <button
-        onClick={() => setIsEditing(false)}
-        className="text-red-600 hover:text-red-700"
-      >
-        Cancel
-      </button>
-    </Box>
-  ) : (
-    <Typography variant="h4" className="font-bold flex items-center gap-2">
-      {user.full_name || user.username}
-      <button
-        onClick={() => {
-          setNewName(user.full_name || user.username);
-          setIsEditing(true);
-        }}
-        className="text-gray-500 hover:text-gray-700 text-sm"
-      >
-        Edit
-      </button>
-    </Typography>
-  )}
+              {isEditing ? (
+                <Box className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    className="px-2 py-1 border rounded text-2xl font-bold"
+                    onKeyPress={(e) => e.key === 'Enter' && handleNameUpdate()}
+                  />
+                  <button
+                    onClick={handleNameUpdate}
+                    className="text-green-600 hover:text-green-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    Cancel
+                  </button>
+                </Box>
+              ) : (
+                <Typography variant="h4" className="font-bold flex items-center gap-2">
+                  {user.full_name || user.username}
+                  <button
+                    onClick={() => {
+                      setNewName(user.full_name || user.username);
+                      setIsEditing(true);
+                    }}
+                    className="text-gray-500 hover:text-gray-700 text-sm"
+                  >
+                    Edit
+                  </button>
+                </Typography>
+              )}
 
               <Typography variant="subtitle1" color="textSecondary">
                 @{user.username}
@@ -198,21 +152,6 @@ const Profile = () => {
                   size="small"
                 />
               </Box>
-
-              <Box className="flex items-center gap-1 mt-4">
-                <Rating
-                  value={user.rating || 0}
-                  precision={0.5}
-                  readOnly
-                />
-                <Typography variant="body2" color="textSecondary">
-                  ({user.rating || 0}/5)
-                </Typography>
-              </Box>
-
-              <Typography variant="body2" color="textSecondary" className="mt-1">
-                Based on {user.rating_count || 0} reviews
-              </Typography>
             </Box>
 
             {user.description && (
@@ -224,64 +163,35 @@ const Profile = () => {
             )}
           </Box>
 
-          {/* Right Column - Listings & Reviews */}
+          {/* Right Column - Listings */}
           <Box className="md:w-2/3">
-            <Tabs
-              value={activeTab}
-              onChange={(e, newValue) => setActiveTab(newValue)}
-              className="mb-4"
-            >
-              <Tab label={`Listings (${userItems.length})`} />
-              <Tab label={`Reviews (${MOCK_REVIEWS.length})`} />
-            </Tabs>
-
-            <TabPanel value={activeTab} index={0}>
-              <Grid container spacing={3}>
-                {userItems.length > 0 ? (
-                  userItems.map((listing, index) => (
-                    <Grid item key={index} xs={12} sm={6} md={6} lg={4}>
-                      <ListingCard
-                        image={listing.image}
-                        title={listing.title}
-                        location={listing.location.join(',\n')}
-                        price={listing.price}
-                        id={listing.id}
-                        sx={{
-                          maxWidth: 300,
-                          height: 60,
-                          overflow: 'hidden',
-                        }}
-                      />
-                    </Grid>
-                  ))
-                ) : (
-                  <Box sx={{ width: '100%', textAlign: 'center', marginTop: 5 }}>
-                    <Typography>No listings available currently!</Typography>
-                  </Box>
-                )}
-              </Grid>
-            </TabPanel>
-
-            <TabPanel value={activeTab} index={1}>
-              <Box className="flex flex-col gap-4">
-                {MOCK_REVIEWS.map((review) => (
-                  <Paper key={review.id} elevation={1} className="p-4">
-                    <Box className="flex justify-between items-start">
-                      <Typography variant="subtitle1" className="font-semibold">
-                        {review.reviewer}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {review.date}
-                      </Typography>
-                    </Box>
-                    <Rating value={review.rating} readOnly size="small" className="mt-1" />
-                    <Typography variant="body2" className="mt-2">
-                      {review.comment}
-                    </Typography>
-                  </Paper>
-                ))}
-              </Box>
-            </TabPanel>
+            <Typography variant="h6" className="mb-4">
+              Listings ({userItems.length})
+            </Typography>
+            <Grid container spacing={3}>
+              {userItems.length > 0 ? (
+                userItems.map((listing, index) => (
+                  <Grid item key={index} xs={12} sm={6} md={6} lg={4}>
+                    <ListingCard
+                      image={listing.image}
+                      title={listing.title}
+                      location={listing.location.join(',\n')}
+                      price={listing.price}
+                      id={listing.id}
+                      sx={{
+                        maxWidth: 300,
+                        height: 60,
+                        overflow: 'hidden',
+                      }}
+                    />
+                  </Grid>
+                ))
+              ) : (
+                <Box sx={{ width: '100%', textAlign: 'center', marginTop: 5 }}>
+                  <Typography>No listings available currently!</Typography>
+                </Box>
+              )}
+            </Grid>
           </Box>
         </Box>
       </Paper>
