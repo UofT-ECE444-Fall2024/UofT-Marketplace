@@ -13,3 +13,4 @@ Flask-Cors
 Flask-SocketIO
 boto3
 gunicorn
+pytest
