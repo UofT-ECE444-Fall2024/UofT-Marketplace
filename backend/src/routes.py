@@ -45,8 +45,12 @@ def create_or_update_user():
             user = User(
                 email=email,
                 username=username,
+                full_name=username,
                 auth_type=auth_type,
-                verified=verified
+                verified=verified,
+                description='',
+                rating=0.0,
+                rating_count=0,
             )
             db.session.add(user)
 
@@ -83,6 +87,42 @@ def get_profile(username):
         'user': user_data
     }), 200
 
+@bp.route('/api/profile/update', methods=['PUT'])
+def update_profile():
+    try:
+        data = request.get_json()
+        user_id = data.get('user_id')
+        full_name = data.get('full_name')
+
+        if not user_id or not full_name:
+            return jsonify({
+                'status': 'error',
+                'message': 'User ID and full name are required'
+            }), 400
+
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({
+                'status': 'error',
+                'message': 'User not found'
+            }), 404
+
+        user.full_name = full_name
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Profile updated successfully',
+            'user': user.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+        
 @bp.route('/')
 def home():
     return jsonify({"message": "Hello World!"})

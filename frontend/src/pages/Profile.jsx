@@ -55,7 +55,39 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState('');
 
+  // Add this function to handle name updates
+  const handleNameUpdate = async () => {
+    try {
+      const response = await fetch('/api/profile/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+          full_name: newName,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      setUserData(prev => ({
+        ...prev,
+        full_name: newName
+      }));
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update name:', error);
+    }
+  };
+  
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -117,9 +149,42 @@ const Profile = () => {
             </Avatar>
 
             <Box className="flex flex-col items-center text-center">
-              <Typography variant="h4" className="font-bold">
-                {userData.full_name || userData.username}
-              </Typography>
+            {isEditing ? (
+    <Box className="flex items-center gap-2">
+      <input
+        type="text"
+        value={newName}
+        onChange={(e) => setNewName(e.target.value)}
+        className="px-2 py-1 border rounded text-2xl font-bold"
+        onKeyPress={(e) => e.key === 'Enter' && handleNameUpdate()}
+      />
+      <button
+        onClick={handleNameUpdate}
+        className="text-green-600 hover:text-green-700"
+      >
+        Save
+      </button>
+      <button
+        onClick={() => setIsEditing(false)}
+        className="text-red-600 hover:text-red-700"
+      >
+        Cancel
+      </button>
+    </Box>
+  ) : (
+    <Typography variant="h4" className="font-bold flex items-center gap-2">
+      {userData.full_name || userData.username}
+      <button
+        onClick={() => {
+          setNewName(userData.full_name || userData.username);
+          setIsEditing(true);
+        }}
+        className="text-gray-500 hover:text-gray-700 text-sm"
+      >
+        Edit
+      </button>
+    </Typography>
+  )}
 
               <Typography variant="subtitle1" color="textSecondary">
                 @{userData.username}
