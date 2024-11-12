@@ -34,6 +34,15 @@ def test_get_listings_with_location(client, setup_data):
     assert data['status'] == 'success'
     assert all("Bahen" in item['location'] for item in data['listings'])
 
+def test_get_listings_with_category(client, setup_data):
+    # Test with category filter (e.g., Accessories)
+    response = client.get('/api/listings', query_string={'category': 'Accessories'})
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['status'] == 'success'
+    assert all("Accessories" in item['category'] for item in data['listings'])
+
 
 def test_get_listings_with_price_range(client, setup_data):
     # Test with price filter (minPrice, maxPrice)
