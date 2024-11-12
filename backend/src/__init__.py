@@ -50,6 +50,6 @@ def create_app():
     from src import routes
     app.register_blueprint(routes.bp)
 
-    socketio.init_app(app, cors_allowed_origins="*")
+    socketio.init_app(app, cors_allowed_origins="*", async_mode='eventlet')
 
     return app
