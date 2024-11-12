@@ -1,6 +1,6 @@
 import pytest
 from src import create_app, db  # Absolute import path
-from src.models import User, Item, ItemImage
+import pytest
 
 test_user_1 = {
     'username': 'testuser1',

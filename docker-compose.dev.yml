@@ -12,7 +12,8 @@ services:
       - FLASK_ENV=development 
     ports:
       - '5000:5000'
-
+    mem_limit: 4g
+    memswap_limit: 5g
   react-frontend:
     container_name: boba-dev-frontend
     build:
@@ -24,5 +25,5 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - NODE_ENV=development
     ports:
-      - '80:80'
+      - '3000:80'
     command: ["nginx", "-g", "daemon off;"] 
