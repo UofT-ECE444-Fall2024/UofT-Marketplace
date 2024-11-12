@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   Container, Paper, Typography, Box, Chip, Avatar, Grid,
-  CardContent, CardMedia
+  CardContent, CardMedia, Rating
 } from '@mui/material';
 import { CheckCircle, Cancel } from '@mui/icons-material';
 import ListingCard from '../components/ListingCard';
@@ -152,6 +152,20 @@ const Profile = () => {
                   size="small"
                 />
               </Box>
+              <Box className="flex items-center gap-1 mt-4">
+                <Rating
+                  value={user.rating ?? 0}
+                  precision={0.5}
+                  readOnly
+                />
+                <Typography variant="body2" color="textSecondary">
+                  ({user.rating ?? 0}/5)
+                </Typography>
+              </Box>
+
+              <Typography variant="body2" color="textSecondary" className="mt-1">
+                Based on {user.rating_count ?? 0} reviews
+              </Typography>
             </Box>
 
             {user.description && (

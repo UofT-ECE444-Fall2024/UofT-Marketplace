@@ -783,6 +783,7 @@ def get_seller_by_conversation(conversation_id):
         return jsonify({
             'status': 'success',
             'username': seller.username,
+            'userId': seller.id,
             'fullname': seller.full_name,
             'item_status': item.status
         }), 200

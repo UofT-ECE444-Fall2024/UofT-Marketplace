@@ -6,6 +6,7 @@ const MessageList = ({ messages, convoId, userId }) => {
     const [sellerUsername, setSellerUsername] = useState("");
     const [sellerName, setSellerName] = useState("");
     const [itemStatus, setItemStatus] = useState("Available");
+    const [sellerId, setSellerId] = useState("")
 
     useEffect(() => {
         if (messagesEndRef.current) {
@@ -22,6 +23,7 @@ const MessageList = ({ messages, convoId, userId }) => {
                 setSellerUsername(data.username);
                 setSellerName(data.fullname);
                 setItemStatus(data.item_status);
+                setSellerId(data.userId);
             } catch (error) {
                 console.error("Failed to fetch seller details:", error);
             }
@@ -32,7 +34,7 @@ const MessageList = ({ messages, convoId, userId }) => {
 
     return (
         <div className="message-list p-4 overflow-y-auto space-y-2 relative bottom-20 mt-40">
-            {(userId != sellerUsername) && (itemStatus != "Available") ? <WriteRating username={sellerUsername} fullname={sellerName}/> : "" }
+            {(userId != sellerId) && (itemStatus != "Available") ? <WriteRating username={sellerUsername} fullname={sellerName}/> : "" }
             {messages.map((message) => (
                 <div
                     key={message.id}
