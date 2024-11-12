@@ -22,14 +22,12 @@ export const useChatSocket = (conversationId, userId) => {
         setJoined(true);
         if (data.messages !== undefined) {
             setMessages(data.messages.map(message => {
-                console.log(message)
                 return {
                     ...message,
                     isMine: message.sender.id === userId
                 };
             }))
         }
-        console.log("Joined " + data.messages);
     });
       newSocket.on('receive_message', (newMessage) => {
         newMessage.isMine = newMessage.sender.id === userId
