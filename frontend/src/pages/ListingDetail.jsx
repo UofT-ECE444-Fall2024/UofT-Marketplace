@@ -12,7 +12,7 @@ function ListingDetail() {
   const { id } = useParams(); // Get the ID from the URL
 
   // user data
-  const [userData, setUserData] = useState(null);
+  const [user, setUser] = useState(null);
 
   // listing details
   const [listing, setListing] = useState(null);
@@ -61,7 +61,7 @@ function ListingDetail() {
       const data = await response.json();
       
       if (response.ok) {
-        setUserData(data.user);
+        setUser(data.user);
       } else {
         setError(data.message);
       }
@@ -151,7 +151,7 @@ function ListingDetail() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          'user_ids': [listing.seller.id, userData.id],
+          'user_ids': [listing.seller.id, user.id],
           'item_id': id
         })
       });
@@ -281,7 +281,7 @@ function ListingDetail() {
 
             <CardActions sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', mt: 2 }}>
               {/* TO DO: connect this button to the chat function to contact seller! */}
-              {userData.username !== listing.seller.username && (
+              {user.username !== listing.seller.username && (
               <Button
                   size="small"
                   sx={{
@@ -298,7 +298,7 @@ function ListingDetail() {
               </Button>
               )}
               
-              {userData.username === listing.seller.username  && (
+              {user.username === listing.seller.username  && (
                 <Box sx={{ mt: 2, display: 'flex', gap: 2, flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
                   <Box 
                     sx={{ 
