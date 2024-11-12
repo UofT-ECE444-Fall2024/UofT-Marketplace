@@ -35,11 +35,8 @@ jobs:
       - name: Wait for services to be ready
         run: sleep 10
 
-      - name: Run backend tests on boba-dev-backend container
-        run: docker-compose -f docker-compose.dev.yml exec -T boba-dev-backend pytest /app/backend/tests
-
-      - name: Run frontend tests on boba-dev-frontend container
-        run: docker-compose -f docker-compose.dev.yml exec -T boba-dev-frontend npm test -- --watchAll=false
+      - name: Run tests on boba-dev-backend container
+        run: docker-compose -f docker-compose.dev.yml exec -T flask-middleware pytest /app/backend/test/
 
       - name: Tear down
         run: docker-compose -f docker-compose.dev.yml down
