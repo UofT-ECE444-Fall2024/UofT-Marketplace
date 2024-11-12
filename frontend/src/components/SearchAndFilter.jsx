@@ -8,6 +8,7 @@ import SortByFilter from './filters/SortByFilter'
 import CategoryFilter from './filters/CategoryFilter';
 import Drawer from '@mui/material/Drawer';
 import Toolbar from '@mui/material/Toolbar';
+import AvailabilityFilter from './filters/AvailabilityFilter';
 
 const drawerWidth = 360;
 
@@ -24,6 +25,7 @@ const SearchAndFilter = ({queries, setQueries, searchAndFilterNavigate}) => {
             <Toolbar />
             <SearchBar queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
             <PriceFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
+            <AvailabilityFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
             <CategoryFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
             <ConditionFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
             <LocationFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />

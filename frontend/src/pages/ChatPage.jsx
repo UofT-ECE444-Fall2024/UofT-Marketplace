@@ -14,7 +14,7 @@ const ChatPage = () => {
   return (
     <div className="chat-page">
       <div className="chat-body">
-        <MessageList messages={messages} />
+        <MessageList messages={messages} convoId={conversationId} userId={userId}/>
       </div>
 
       <MessageInput onSendMessage={sendMessage} userId={userId} />

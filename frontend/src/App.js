@@ -2,7 +2,6 @@ import './App.css';
 import Navbar from "./components/Navbar"
 import { Route, Routes, Navigate } from 'react-router-dom';
 import Landing from './pages/Landing';
-import Chat from './pages/Chat';
 import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import ListingsGrid from './pages/ListingsPage';
