@@ -13,7 +13,7 @@ const NavItem = ({ to, icon, onClick }) => {
       to={to}
       onClick={onClick}
       className={`relative px-3 py-2 transition-colors duration-300 group ${
-        isActive ? 'text-blue-900' : 'text-gray-500 hover:text-blue-900'
+        isActive ? 'text-[var(--customDarkBlue)]' : 'text-gray-500 hover:text-[var(--customDarkBlue)]'
       }`}
     >
       {icon}
@@ -50,12 +50,10 @@ export default function Navbar() {
           <div className="mx-auto">
             <div className="flex justify-between items-center h-16 p-8">
               <div className="flex-shrink-0">
-                <Link 
-                  to="/home" 
-                  className="text-2xl font-bold text-blue-900 transition-colors duration-300 hover:text-gray-500"
-                >
-                  Bobaplace
-                </Link>
+              <Link to="/home" className="flex items-center space-x-2 text-2xl font-bold text-[var(--customDarkBlue)] transition-colors duration-300 hover:text-gray-500">
+                <img src="/boba.png" alt="Boba" className="h-8 w-8" />
+                <span>bobaplace</span>
+              </Link>
               </div>
               <div className="hidden md:flex space-x-4">
                 {navItems.map((item) => (
@@ -65,7 +63,7 @@ export default function Navbar() {
               <div className="md:hidden">
                 <button
                   onClick={toggleMenu}
-                  className="text-gray-500 hover:text-blue-900 focus:outline-none transition-colors duration-300"
+                  className="text-gray-500 hover:text-[var(--customDarkBlue)] focus:outline-none transition-colors duration-300"
                 >
                   <svg
                     className="h-6 w-6"
@@ -104,8 +102,8 @@ export default function Navbar() {
                 to={item.to}
                 className={`block px-4 py-2 transition-colors duration-300 ${
                   location.pathname === item.to 
-                    ? 'text-blue-900 bg-blue-50'
-                    : 'text-gray-500 hover:bg-blue-50 hover:text-blue-900'
+                    ? 'text-[var(--customDarkBlue)] bg-blue-50'
+                    : 'text-gray-500 hover:bg-blue-50 hover:text-[var(--customDarkBlue)]'
                 }`}
                 onClick={() => setIsOpen(false)}
               >

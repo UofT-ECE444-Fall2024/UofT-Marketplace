@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogActions, Button, IconButton, Grid, CircularProgress } from '@mui/material';
+import { Dialog, DialogContent, DialogActions, Button, IconButton, Grid, CircularProgress, Typography, Box } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ImageCarousel from './AddListing/ImageCarousel';
 import ListingForm from './AddListing/ListingForm';
@@ -83,11 +83,17 @@ function AddListingPopup({ open, onClose, onPublish }) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth sx={{ borderRadius: 2 }}>
       <IconButton onClick={onClose} style={{ position: 'absolute', right: 8, top: 8 }} aria-label="Close">
         <CloseIcon />
       </IconButton>
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '400px', pt: 4 }}>
+        <Box sx={{ width: '100%', paddingLeft: 2, paddingBottom: 2 }}>
+          <Typography variant="h5" sx={{ fontWeight: 'bold', color: "#6b7280" }}> 
+            Add Your Listing
+          </Typography>
+        </Box>
+        
         <Grid container spacing={2} justifyContent="center">
           <Grid item xs={12} sm={6}>
             <ImageCarousel
@@ -116,7 +122,7 @@ function AddListingPopup({ open, onClose, onPublish }) {
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handlePublish} variant="contained" color="primary" disabled={loading}>
+        <Button onClick={handlePublish} variant="contained" sx={{ color: "white", backgroundColor: "var(--customDarkBlue)" }} disabled={loading}>
           {loading ? <CircularProgress size={24} /> : 'Publish'}
         </Button>
       </DialogActions>

@@ -43,6 +43,7 @@ function ListingDetail() {
       const data = await response.json();
       setListing(data.listing); // Assuming the API returns the listing in 'listing' field
       setSelectedListing(data.listing);
+      setAvailable(data.listing.status);
     } catch (err) {
       setError(err.message);
     } finally {

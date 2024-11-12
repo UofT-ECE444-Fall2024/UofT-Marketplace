@@ -26,7 +26,7 @@ function ListingCard({ image, title, location, price, id, isFavorite, onFavorite
   };
 
   return (
-    <Card sx={{ boxShadow: 2, borderRadius: 5, m: 2, overflow: 'hidden' }} onClick={handleCardClick}>
+    <Card sx={{ boxShadow: 2, borderRadius: 2, m: 2, overflow: 'hidden' }} onClick={handleCardClick}>
       <Box
         sx={{
           position: 'relative',
