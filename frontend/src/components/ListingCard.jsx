@@ -2,9 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, Typography, IconButton, Box } from '@mui/material';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+import { useNavigate } from 'react-router-dom';
 
 function ListingCard({ image, title, location, price, id, isFavorite, onFavoriteUpdate, userId }) {
   const [favoriteStatus, setFavoriteStatus] = useState(isFavorite);
+  const navigate = useNavigate();
 
   // Update local state when parent component changes the `isFavorite` prop
   useEffect(() => {
@@ -22,7 +24,7 @@ function ListingCard({ image, title, location, price, id, isFavorite, onFavorite
 
   const handleCardClick = () => {
     const listingUrl = `/listings/${id}`;
-    window.open(listingUrl, '_blank');
+    navigate(listingUrl);
   };
 
   return (
