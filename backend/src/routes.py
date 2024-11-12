@@ -6,14 +6,11 @@ from src.s3_utils import upload_to_s3, delete_image_from_s3
 from flask_socketio import emit, join_room
 from datetime import datetime, timedelta
 from src import socketio
-from flask import Blueprint, jsonify, request, redirect, session
+from flask import Blueprint, jsonify, request
 from src.models import db, User, Item, ItemImage
 import base64
-from stytch import Client as StytchClient
 import os
-from dotenv import load_dotenv  # Add this import
 from urllib.parse import urlencode
-import json
 
 bp = Blueprint('main', __name__)
 
