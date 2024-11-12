@@ -1,12 +1,16 @@
 import boto3
 import uuid
 from urllib.parse import urlparse
+from dotenv import load_dotenv
+import os
 
-# TO-DO: Figure out way to store keys & tokens
-AWS_ACCESS_KEY_ID = 'AKIASDRANCKCVV52NGGU'
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_REGION ='us-east-2'
-AWS_BUCKET_NAME = 'uoftmarketplacebucket'
+# Load environment variables
+load_dotenv()
+
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_REGION = os.getenv('AWS_REGION')
+AWS_BUCKET_NAME = os.getenv('AWS_BUCKET_NAME')
 
 s3_client = boto3.client(
     's3',
