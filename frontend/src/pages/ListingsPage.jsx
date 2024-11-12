@@ -18,7 +18,6 @@ function ListingsGrid({listings, setListings}) {
     fetchFavorites();
   }, []);
 
-
   const fetchFavorites = async () => {
     try {
       const userId = JSON.parse(localStorage.getItem('user')).id;
@@ -53,7 +52,7 @@ function ListingsGrid({listings, setListings}) {
     try {
       const userId = JSON.parse(localStorage.getItem('user')).id;
       if (!userId) return;
-
+  
       if (isFavorited) {
         await fetch('/api/favorites', {
           method: 'POST',
@@ -63,7 +62,7 @@ function ListingsGrid({listings, setListings}) {
       } else {
         await fetch(`/api/favorites/${userId}/${listingId}`, { method: 'DELETE' });
       }
-
+  
       const newFavoriteIds = new Set(favoriteIds);
       isFavorited ? newFavoriteIds.add(listingId) : newFavoriteIds.delete(listingId);
       setFavoriteIds(newFavoriteIds);

@@ -13,35 +13,11 @@ function ListingCard({ image, title, location, price, id, isFavorite, onFavorite
 
   const handleFavoriteClick = useCallback(
     async (e) => {
-      const userId = JSON.parse(localStorage.getItem('user')).id;
       e.stopPropagation();
       const newFavoriteStatus = !favoriteStatus;
       setFavoriteStatus(newFavoriteStatus);
-      try {
-        if (newFavoriteStatus) {
-          // Send POST request to add favorite
-          await fetch('/api/favorites', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ user_id: userId, item_id: id }),
-          });
-        } else {
-          // Send DELETE request to remove favorite
-          await fetch(`/api/favorites/${userId}/${id}`, {
-            method: 'DELETE',
-          });
-        }
-        // Inform parent component of the update
-        onFavoriteUpdate(id, newFavoriteStatus);
-      } catch (error) {
-        console.error('Error updating favorite status:', error);
-        // Revert state if API request fails
-        setFavoriteStatus(!newFavoriteStatus);
-      }
-    },
-    [favoriteStatus, id, onFavoriteUpdate, userId]
+      onFavoriteUpdate(id, newFavoriteStatus); // notify parent
+    }
   );
 
   const handleCardClick = () => {
