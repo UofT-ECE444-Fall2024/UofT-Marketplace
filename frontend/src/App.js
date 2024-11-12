@@ -6,11 +6,11 @@ import Auth from './pages/Auth';
 import Profile from './pages/Profile';
 import ListingsGrid from './pages/ListingsPage';
 import ListingDetail from './pages/ListingDetail';
-// import NotFound from './NotFound'; // 404 Not Found component
 import { useStytchUser } from "@stytch/react";
-import RatingTest from './components/ratings/RatingTest'
+import RatingTest from './components/ratings/RatingTest';
 import ConversationsPage from './pages/ConversationsPage';
 import ChatPage from './pages/ChatPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 const WithNavbar = ({ children }) => (
   <>
@@ -19,21 +19,71 @@ const WithNavbar = ({ children }) => (
   </>
 );
 
+const ProtectedRouteWithNavbar = ({ children }) => (
+  <ProtectedRoute>
+    <WithNavbar>{children}</WithNavbar>
+  </ProtectedRoute>
+);
+
 function App() {
   const { user } = useStytchUser();
 
   return (
     <div className="App">
       <Routes>
-      <Route path="/" element={user ? <Navigate to="/home" replace /> : <Auth />} />
-      <Route path="/home" element={<WithNavbar><ListingsGrid /></WithNavbar>} />
-        <Route path="/listings/:id" element={<WithNavbar><ListingDetail /></WithNavbar>} /> {/* Dynamic route for listing details /}
-        {/ <Route path="*" element={<NotFound />} /> Catch-all for 404 errors */}
-        <Route path="/chat" element={<WithNavbar><ConversationsPage /></WithNavbar>} />
-        <Route path="/chat/:conversationId" element={<WithNavbar><ChatPage /></WithNavbar>} />
-        <Route path="/profile" element={<WithNavbar><Profile /></WithNavbar>} />
-        <Route path="/landing" element={<WithNavbar><Landing /></WithNavbar>} />
-        {/* The following route is temporary */}
+        <Route path="/" element={user ? <Navigate to="/home" replace /> : <Auth />} />
+        
+        {/* Protected routes */}
+        <Route 
+          path="/home" 
+          element={
+            <ProtectedRouteWithNavbar>
+              <ListingsGrid />
+            </ProtectedRouteWithNavbar>
+          } 
+        />
+        <Route 
+          path="/listings/:id" 
+          element={
+            <ProtectedRouteWithNavbar>
+              <ListingDetail />
+            </ProtectedRouteWithNavbar>
+          } 
+        />
+        <Route 
+          path="/chat" 
+          element={
+            <ProtectedRouteWithNavbar>
+              <ConversationsPage />
+            </ProtectedRouteWithNavbar>
+          } 
+        />
+        <Route 
+          path="/chat/:conversationId" 
+          element={
+            <ProtectedRouteWithNavbar>
+              <ChatPage />
+            </ProtectedRouteWithNavbar>
+          } 
+        />
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRouteWithNavbar>
+              <Profile />
+            </ProtectedRouteWithNavbar>
+          } 
+        />
+        <Route 
+          path="/landing" 
+          element={
+            <ProtectedRouteWithNavbar>
+              <Landing />
+            </ProtectedRouteWithNavbar>
+          } 
+        />
+        
+        {/* Public route */}
         <Route path="/rate" element={<RatingTest username="admin" fullname="Admin"/>} />
       </Routes>
     </div>
