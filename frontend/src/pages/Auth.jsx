@@ -79,7 +79,7 @@ const Auth = () => {
       }
 
       // Store user data in localStorage for future use
-      localStorage.setItem('userData', JSON.stringify(data.user));
+      localStorage.setItem('user', JSON.stringify(data.user));
       return data.user;
     } catch (error) {
       console.error('Error creating/updating user:', error);

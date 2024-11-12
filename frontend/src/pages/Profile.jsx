@@ -50,7 +50,7 @@ const TabPanel = ({ children, value, index }) => (
 );
 
 const Profile = () => {
-  const [userData, setUserData] = useState(null);
+  const [user, setUser] = useState(null);
   const [userItems, setUserItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -67,7 +67,7 @@ const Profile = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          user_id: userData.id,
+          user_id: user.id,
           full_name: newName,
         }),
       });
@@ -78,7 +78,7 @@ const Profile = () => {
         throw new Error(data.message);
       }
 
-      setUserData(prev => ({
+      setUser(prev => ({
         ...prev,
         full_name: newName
       }));
@@ -95,14 +95,14 @@ const Profile = () => {
   const fetchProfile = async () => {
     try {
       // Get user data from localStorage
-      const storedUserData = localStorage.getItem('userData');
+      const storedUserData = localStorage.getItem('user');
       
       if (!storedUserData) {
-        throw new Error('No user data found in localStorage');
+        throw new Error('No user found in localStorage');
       }
 
       const parsedUserData = JSON.parse(storedUserData);
-      setUserData(parsedUserData);
+      setUser(parsedUserData);
 
       // Fetch user's items if you have the user ID
       if (parsedUserData.id) {
@@ -124,15 +124,15 @@ const Profile = () => {
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
-  if (!userData) return <div>No user data found</div>;
+  if (!user) return <div>No user data found</div>;
 
-  const initials = userData.full_name
-    ? userData.full_name
+  const initials = user.full_name
+    ? user.full_name
         .split(' ')
         .map(name => name[0])
         .join('')
         .toUpperCase()
-    : userData.username?.[0]?.toUpperCase() || '?';
+    : user.username?.[0]?.toUpperCase() || '?';
 
   return (
     <Container maxWidth="lg" className="mt-8">
@@ -173,10 +173,10 @@ const Profile = () => {
     </Box>
   ) : (
     <Typography variant="h4" className="font-bold flex items-center gap-2">
-      {userData.full_name || userData.username}
+      {user.full_name || user.username}
       <button
         onClick={() => {
-          setNewName(userData.full_name || userData.username);
+          setNewName(user.full_name || user.username);
           setIsEditing(true);
         }}
         className="text-gray-500 hover:text-gray-700 text-sm"
@@ -187,38 +187,38 @@ const Profile = () => {
   )}
 
               <Typography variant="subtitle1" color="textSecondary">
-                @{userData.username}
+                @{user.username}
               </Typography>
 
               <Box className="flex items-center gap-2 mt-2">
                 <Chip
-                  icon={userData.verified ? <CheckCircle /> : <Cancel />}
-                  label={userData.verified ? "Verified" : "Unverified"}
-                  color={userData.verified ? "success" : "default"}
+                  icon={user.verified ? <CheckCircle /> : <Cancel />}
+                  label={user.verified ? "Verified" : "Unverified"}
+                  color={user.verified ? "success" : "default"}
                   size="small"
                 />
               </Box>
 
               <Box className="flex items-center gap-1 mt-4">
                 <Rating
-                  value={userData.rating || 0}
+                  value={user.rating || 0}
                   precision={0.5}
                   readOnly
                 />
                 <Typography variant="body2" color="textSecondary">
-                  ({userData.rating || 0}/5)
+                  ({user.rating || 0}/5)
                 </Typography>
               </Box>
 
               <Typography variant="body2" color="textSecondary" className="mt-1">
-                Based on {userData.rating_count || 0} reviews
+                Based on {user.rating_count || 0} reviews
               </Typography>
             </Box>
 
-            {userData.description && (
+            {user.description && (
               <Box className="mt-4 text-center">
                 <Typography variant="body1">
-                  {userData.description}
+                  {user.description}
                 </Typography>
               </Box>
             )}
