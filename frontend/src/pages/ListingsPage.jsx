@@ -8,15 +8,13 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Add as AddIcon, FavoriteBorder as FavoriteBorderIcon, Favorite as FavoriteIcon } from '@mui/icons-material';
 
 
-function ListingsGrid({listings, setListings}) {
+function ListingsGrid({listings, setListings, openPopup, setOpenPopup}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [openPopup, setOpenPopup] = useState(false);
   const [showFavorites, setShowFavorites] = useState(false);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
 
   useEffect(() => {
-    console.log(JSON.parse(localStorage.getItem('user')));
     fetchFavorites();
   }, []);
 
@@ -136,7 +134,7 @@ const ListingsPage = () => {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  const [openPopup, setOpenPopup] = useState(false);
   const [queries, setQueries] = useState({});
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -152,9 +150,11 @@ const ListingsPage = () => {
     navigate(url_query_string);
   }
 
+
   useEffect(() => {
     const apiSearchQuery = searchParams.toString().length > 0 ? `?${searchParams.toString()}` : "";
-    fetch(`/api/listings${apiSearchQuery}`)
+    if (!openPopup) {
+      fetch(`/api/listings${apiSearchQuery}`)
         .then(response => response.json())
         .then(data => {
           if (data.status === 'success') {
@@ -163,12 +163,13 @@ const ListingsPage = () => {
             setError(data.message || 'Error fetching listings');
           }
         });
-  }, [searchParams, listings]);
+    }
+  }, [searchParams, openPopup]);
 
   return (
     <Box sx={{ display: 'flex' }}>
       <SearchAndFilter queries={queries} setQueries={setQueries} searchAndFilterNavigate={searchAndFilterNavigate} />
-      <ListingsGrid listings={listings} setListings={setListings} />
+      <ListingsGrid listings={listings} setListings={setListings} openPopup={openPopup} setOpenPopup={setOpenPopup} />
     </Box>
   )
 }
