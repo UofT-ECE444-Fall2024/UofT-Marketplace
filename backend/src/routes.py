@@ -184,6 +184,7 @@ def get_listings():
     max_price_query = request.args.get("maxPrice")
     sort_by_query = request.args.get("sortBy")
     category_query = request.args.get("category")
+    availability_query = request.args.get("availability")
     try:
         # Initialize the base query
         query = Item.query
@@ -216,6 +217,10 @@ def get_listings():
 
         if max_price_query:
             filters.append(Item.price <= float(max_price_query))
+        
+        if availability_query:
+            availability_statuses = availability_query.split(',')
+            filters.append(Item.status.in_(availability_statuses))
 
         # Apply all collected filters at once using `.filter(*filters)`
         if filters:
