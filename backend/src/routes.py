@@ -384,6 +384,39 @@ def update_listing(id):
             'message': str(e)
         }), 500
 
+@bp.route('/api/listings/availibility/<int:id>', methods=['PUT'])
+def update_availibility(id):
+    try:
+        data = request.json
+
+        # Retrieve the existing item by ID
+        item = db.session.get(Item, id)
+
+        if not item:
+            return jsonify({
+                'status': 'error',
+                'message': 'Listing not found'
+            }), 404
+
+        # Update item fields
+        item.status = data.get('status', item.status)
+
+        db.session.commit()
+
+        # Return the updated item data using the to_dict method
+        return jsonify({
+            'status': 'success',
+            'message': 'Listing availibility updated successfully',
+            'item': item.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 
 @bp.route('/api/listings/<int:listing_id>/images/<int:image_index>', methods=['DELETE'])
 def delete_image(listing_id, image_index):

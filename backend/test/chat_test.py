@@ -1,3 +1,4 @@
+import pytest
 from src import create_app, db  # Absolute import path
 from src.models import User, Item, ItemImage
 
@@ -23,20 +24,6 @@ test_item = {
     'location': 'Test Location',
     'images': []
 }
-
-@pytest.fixture
-def client():
-    # Set up the application in testing mode
-    app = create_app()
-    app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
-    
-    # Use the app context for setting up and tearing down the database
-    with app.app_context():
-        db.create_all()  # Create tables
-        yield app.test_client()  # Provide the test client
-        db.session.remove()  # Remove the session
-        db.drop_all()  # Drop tables after tests are done
 
 def test_create_conversation(client):
     client.post('/api/auth/register', json=test_user_1)
