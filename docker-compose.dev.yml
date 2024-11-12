@@ -12,6 +12,8 @@ services:
       - FLASK_ENV=development 
     ports:
       - '5000:5000'
+    mem_limit: 2g
+    memswap_limit: 3g
   react-frontend:
     container_name: boba-dev-frontend
     command: ["npm", "start"]
@@ -24,5 +26,3 @@ services:
       - NODE_ENV=development
     ports:
       - '3000:3000'
-    mem_limit: 2g
-    memswap_limit: 3g
