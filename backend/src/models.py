@@ -10,7 +10,7 @@ class User(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
+    password_hash = db.Column(db.String(256), nullable=True)
     full_name = db.Column(db.String(120))
     email = db.Column(db.String(120), unique=True)
     verified = db.Column(db.Boolean, default=False)
@@ -22,11 +22,14 @@ class User(db.Model):
     rating = db.Column(db.Float, nullable=False, default=0.0)
     rating_count = db.Column(db.Integer, nullable=False, default=0)
 
+    auth_type = db.Column(db.String(20), default='local')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
+        if not self.password_hash:  # Handle OAuth users who don't have a password
+            return False
         return check_password_hash(self.password_hash, password)
 
     def to_dict(self):
