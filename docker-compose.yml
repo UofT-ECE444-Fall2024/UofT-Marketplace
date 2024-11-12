@@ -3,7 +3,7 @@ version: '3'
 services:
   backend:
     container_name: boba-backend
-    command: [ "gunicorn", "app:app", "--workers=2", "--bind=0.0.0.0:5000" ]
+    command: [ "gunicorn", "app:app", "--worker-class", "eventlet", "--workers=2", "--bind=0.0.0.0:5000" ]
     build: ./backend
     environment:
       - FLASK_APP=src:create_app
