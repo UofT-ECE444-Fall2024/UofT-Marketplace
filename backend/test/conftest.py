@@ -1,7 +1,7 @@
 import json
 import pytest
 from src import create_app, db  # Absolute import path
-from src.models import User, Item, ItemImage
+from src.models import User, Item, ItemImage, Favorite
 
 LOCATIONS = [
     'Bahen',
@@ -119,4 +119,49 @@ def setup_rating_data(client):
         'rating': user_data.get('rating', 0.0),  # Set default to 0.0 if not provided
         'rating_count': user_data.get('rating_count', 0)  # Set default to 0 if not provided
     }
-  
+
+# Test Favorites Fxture  
+@pytest.fixture
+def setup_favorites_data(app):
+    """Fixture to set up test data for favorites"""
+    user1 = User(username='Robin', email='test1@test.com')
+    user2 = User(username='McLovin', email='test2@test.com')
+    db.session.add_all([user1, user2])
+    item1 = Item(title='Couch', price='$20', condition='New')
+    item2 = Item(title='Some Books', price='$30', condition='Used')
+
+
+    db.session.add_all([item1, item2])
+    
+    db.session.commit()
+    
+    favorite1 = Favorite(user_id=user1.id, item_id=item1.id)
+    db.session.add(favorite1)
+    db.session.commit()
+
+    yield
+
+
+
+    # Cleanup
+    db.session.query(Favorite).delete()
+    db.session.query(Item).delete()
+    db.session.query(User).delete()
+    db.session.commit()
+
+# Test the favorites performance testing
+
+@pytest.fixture
+def app():
+    app = create_app()
+    app.config.update({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"  # Use in-memory database for isolation
+    })
+
+
+    db.create_all()  # Create tables at the start of each test session
+    yield app
+    db.session.remove()
+    db.drop_all()  # Drop tables after each test to avoid conflicts
+    db.session.commit()
