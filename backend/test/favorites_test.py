@@ -116,31 +116,4 @@ def test_get_favorites_invalid_user(client, setup_data):
     assert response.status_code == 404
     # assert data['status'] == 'error'
 
-@pytest.fixture
-def setup_favorites_data(app):
-    """Fixture to set up test data for favorites"""
-    with app.app_context():
-        user1 = User(username='Robin', email='test1@test.com')
-        user2 = User(username='McLovin', email='test2@test.com')
-        db.session.add_all([user1, user2])
-        item1 = Item(title='Couch', price='$20', condition='New')
-        item2 = Item(title='Some Books', price='$30', condition='Used')
 
-
-        db.session.add_all([item1, item2])
-        
-        db.session.commit()
-        
-        favorite1 = Favorite(user_id=user1.id, item_id=item1.id)
-        db.session.add(favorite1)
-        db.session.commit()
-
-        yield
-
-
-
-        # Cleanup
-        db.session.query(Favorite).delete()
-        db.session.query(Item).delete()
-        db.session.query(User).delete()
-        db.session.commit()
