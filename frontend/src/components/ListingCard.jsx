@@ -73,16 +73,34 @@ function ListingCard({ image, title, location, price, id, isFavorite, onFavorite
           }}
         />
       </Box>
-      <CardContent sx={{ textAlign: 'left' }}>
+      <CardContent 
+        sx={{
+          textAlign: 'left',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          overflow: 'hidden',
+          height: '100%' // Ensures the content area doesn’t grow beyond the card height
+        }}
+      >
         <Box display="flex" alignItems="center">
-          <Typography variant="subtitle1" component="div" fontWeight="bold" sx={{ flexGrow: 1 }}>
+          <Typography 
+            variant="subtitle1" 
+            component="div" 
+            fontWeight="bold" 
+            sx={{ flexGrow: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
             {title}
           </Typography>
           <IconButton aria-label="add to favorites" onClick={handleFavoriteClick}>
             {favoriteStatus ? <FavoriteIcon color="error" /> : <FavoriteBorderIcon />}
           </IconButton>
         </Box>
-        <Typography variant="body2" color="text.secondary">
+        <Typography 
+          variant="body2" 
+          color="text.secondary" 
+          sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+        >
           {location}
         </Typography>
         <Typography variant="subtitle2" color="text.primary" fontWeight="bold">
