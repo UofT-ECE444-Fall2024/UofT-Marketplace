@@ -159,8 +159,9 @@ def app():
         "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"  # Use in-memory database for isolation
     })
 
-    with app.app_context():
-        db.create_all()  # Create tables at the start of each test session
-        yield app
-        db.session.remove()
-        db.drop_all()  # Drop tables after each test to avoid conflicts
+
+    db.create_all()  # Create tables at the start of each test session
+    yield app
+    db.session.remove()
+    db.drop_all()  # Drop tables after each test to avoid conflicts
+    db.session.commit()
