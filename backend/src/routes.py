@@ -756,6 +756,43 @@ def read_rating(username):
         'user_rating': user_rating
     }), 200
 
+@bp.route('/api/conversations/<int:conversation_id>/seller', methods=['GET'])
+def get_seller_by_conversation(conversation_id):
+    try:
+        # Fetch the conversation by ID
+        conversation = Conversation.query.get(conversation_id)
+        
+        if not conversation:
+            return jsonify({
+                'status': 'error',
+                'message': 'Conversation not found'
+            }), 404
+
+        # Retrieve the item associated with the conversation
+        item = Item.query.get(conversation.item_id)
+
+        seller = User.query.get(item.user_id)
+
+        if not item:
+            return jsonify({
+                'status': 'error',
+                'message': 'Item associated with conversation not found'
+            }), 404
+
+        # Return the user ID of the seller (owner of the item)
+        return jsonify({
+            'status': 'success',
+            'username': seller.username,
+            'fullname': seller.full_name,
+            'item_status': item.status
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 ####################################DEBUGGING############################
 @bp.route('/api/debug/users', methods=['GET'])
 def debug_users():
