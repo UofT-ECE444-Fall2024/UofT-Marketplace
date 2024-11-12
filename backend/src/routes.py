@@ -15,6 +15,56 @@ import json
 
 bp = Blueprint('main', __name__)
 
+# Add this to your routes.py file
+
+@bp.route('/api/auth/user', methods=['POST'])
+def create_or_update_user():
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        username = data.get('username')
+        auth_type = data.get('auth_type')
+        verified = data.get('verified', False)
+
+        if not email or not username:
+            return jsonify({
+                'status': 'error',
+                'message': 'Email and username are required'
+            }), 400
+
+        # Check if user already exists
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            # Update existing user
+            user.username = username
+            user.auth_type = auth_type
+            user.verified = verified
+        else:
+            # Create new user
+            user = User(
+                email=email,
+                username=username,
+                auth_type=auth_type,
+                verified=verified
+            )
+            db.session.add(user)
+
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'User created/updated successfully',
+            'user': user.to_dict()
+        }), 200
+
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+    
 @bp.route('/api/profile/<username>', methods=['GET'])
 def get_profile(username):
     # Query the database instead of checking config

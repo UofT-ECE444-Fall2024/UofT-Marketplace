@@ -54,13 +54,52 @@ const Auth = () => {
       "logoImageUrl": ""
     }
   };
+  const createOrUpdateUser = async (email) => {
+    try {
+      // Extract username from email (everything before @)
+      const username = email.split('@')[0];
+      
+      const response = await fetch('/api/auth/user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          username,
+          auth_type: 'stytch',
+          verified: true // Since they verified their email through Stytch
+        }),
+      });
 
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create user');
+      }
+
+      // Store user data in localStorage for future use
+      localStorage.setItem('userData', JSON.stringify(data.user));
+      return data.user;
+    } catch (error) {
+      console.error('Error creating/updating user:', error);
+      throw error;
+    }
+  };
+  
   // Callbacks for authentication events
   const callbacks = {
     onEvent: () => {
-      const emailInput = document.getElementById('email-input').value;
-      if (!emailInput.endsWith('@mail.utoronto.ca') && !emailInput.endsWith('@utoronto.ca')) {
+
+      const emailInput = document.getElementById('email-input');
+      if (!emailInput || !emailInput.value) {
+        return;
+      }
+      if (!emailInput.value.endsWith('@mail.utoronto.ca') && !emailInput.value.endsWith('@utoronto.ca')) {
         throw new Error("Please login with your utoronto email!"); 
+      }
+      else{
+      createOrUpdateUser(emailInput.value);
       }
     },
     onSuccess: () => {
