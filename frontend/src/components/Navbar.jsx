@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import AppBar from '@mui/material/AppBar';
+import { Home, Chat, Person } from '@mui/icons-material';
 
-const NavItem = ({ to, children }) => {
+const NavItem = ({ to, icon }) => {
   const location = useLocation();
   const isActive = location.pathname === to;
   
@@ -10,13 +11,14 @@ const NavItem = ({ to, children }) => {
     <Link
       to={to}
       className={`relative px-3 py-2 transition-colors duration-300 group ${
-        isActive ? 'text-blue-600' : 'text-gray-700 hover:text-blue-600'
+        isActive ? 'text-blue-900' : 'text-gray-500 hover:text-blue-900'
       }`}
     >
-      {children}
-      <span className={`absolute inset-x-0 bottom-0 h-0.5 bg-blue-600 transform transition-transform duration-300 ${
-        isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
-      }`}></span>
+      {icon}
+      {/* The commented line below is for underline hovers */}
+      {/* <span className={`absolute inset-x-0 bottom-0 h-0.5 bg-blue-900 transform transition-transform duration-600 ${
+          isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+      }`}></span> */}
     </Link>
   );
 };
@@ -28,35 +30,33 @@ export default function Navbar() {
   const toggleMenu = () => setIsOpen(!isOpen);
 
   const navItems = [
-    { name: 'Home', to: '/home' },
-    { name: 'Chat', to: '/chat' },
-    { name: 'Profile', to: '/profile' },
+    { name: 'Home', to: '/home', icon: <Home /> },
+    { name: 'Chat', to: '/chat', icon: <Chat /> },
+    { name: 'Profile', to: '/profile', icon: <Person /> },
   ];
 
   return (
-      <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <nav className="bg-white shadow-lg">
-          <div className="max-w-6xl mx-auto px-4">
-            <div className="flex justify-between items-center h-16">
+      <AppBar position="fixed" sx={{ boxShadow:'none', borderBottom: '1px solid #e0e0e0', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+        <nav className="bg-white">
+          <div className="mx-auto">
+            <div className="flex justify-between items-center h-16 p-8">
               <div className="flex-shrink-0">
                 <Link 
                   to="/home" 
-                  className="text-2xl font-bold text-blue-600 transition-colors duration-300 hover:text-blue-800"
+                  className="text-2xl font-bold text-blue-900 transition-colors duration-300 hover:text-gray-500"
                 >
                   UofT Marketplace
                 </Link>
               </div>
               <div className="hidden md:flex space-x-4">
                 {navItems.map((item) => (
-                  <NavItem key={item.name} to={item.to}>
-                    {item.name}
-                  </NavItem>
+                  <NavItem key={item.name} to={item.to} icon={item.icon} />
                 ))}
               </div>
               <div className="md:hidden">
                 <button
                   onClick={toggleMenu}
-                  className="text-gray-500 hover:text-blue-600 focus:outline-none transition-colors duration-300"
+                  className="text-gray-500 hover:text-blue-900 focus:outline-none transition-colors duration-300"
                 >
                   <svg
                     className="h-6 w-6"
@@ -95,8 +95,8 @@ export default function Navbar() {
                 to={item.to}
                 className={`block px-4 py-2 transition-colors duration-300 ${
                   location.pathname === item.to 
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
+                    ? 'text-blue-900 bg-blue-50'
+                    : 'text-gray-500 hover:bg-blue-50 hover:text-blue-900'
                 }`}
                 onClick={() => setIsOpen(false)}
               >
