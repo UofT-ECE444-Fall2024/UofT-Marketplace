@@ -26,7 +26,6 @@ const Auth = () => {
       if (response.ok) {
         localStorage.setItem('user', JSON.stringify(data.user));
         setStatus({ error: '', success: 'Successfully logged in!' });
-        setTimeout(() => navigate('/home'), 1000);
       } else {
         setStatus({ error: data.message || 'Login failed', success: '' });
       }
