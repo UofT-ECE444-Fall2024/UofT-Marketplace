@@ -32,8 +32,9 @@ jobs:
       - name: Build and start containers
         run: docker-compose -f docker-compose.dev.yml up -d --build
 
-      - name: Wait for services to be ready
-        run: sleep 10
+      - name: Wait for backend service to be ready
+        run: |
+          docker-compose -f docker-compose.dev.yml exec -T flask-middleware /bin/bash -c 'while ! nc -z localhost 5000; do sleep 1; done'
 
       - name: Run tests on boba-dev-backend container
         run: docker-compose -f docker-compose.dev.yml exec -T flask-middleware pytest /app/backend/test/
