@@ -36,10 +36,10 @@ jobs:
         run: sleep 10
 
       - name: Run backend tests on boba-dev-backend container
-        run: docker-compose -f docker-compose.dev.yml exec flask-middleware pytest /app/backend/tests
+        run: docker-compose -f docker-compose.dev.yml exec -T boba-dev-backend pytest /app/backend/tests
 
       - name: Run frontend tests on boba-dev-frontend container
-        run: docker-compose -f docker-compose.de.yml exec react-frontend npm test -- --watchAll=false
+        run: docker-compose -f docker-compose.dev.yml exec -T boba-dev-frontend npm test -- --watchAll=false
 
       - name: Tear down
         run: docker-compose -f docker-compose.dev.yml down
