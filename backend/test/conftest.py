@@ -148,3 +148,19 @@ def setup_favorites_data(app):
     db.session.query(Item).delete()
     db.session.query(User).delete()
     db.session.commit()
+
+# Test the favorites performance testing
+
+@pytest.fixture
+def app():
+    app = create_app()
+    app.config.update({
+        "TESTING": True,
+        "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:"  # Use in-memory database for isolation
+    })
+
+    with app.app_context():
+        db.create_all()  # Create tables at the start of each test session
+        yield app
+        db.session.remove()
+        db.drop_all()  # Drop tables after each test to avoid conflicts
