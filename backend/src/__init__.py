@@ -4,6 +4,9 @@ from flask import Flask
 from flask_cors import CORS
 from src.models import db, User
 from datetime import datetime
+from flask_socketio import SocketIO
+
+socketio = SocketIO()
 
 def create_app():
     app = Flask(__name__)
@@ -18,13 +21,13 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
+    
     # Create tables and admin user
     with app.app_context():
         from src.models import db, User
 
         # Initialize database
         db.init_app(app)
-
         db.create_all()
         
         # Check if admin user exists, if not create it
@@ -46,5 +49,7 @@ def create_app():
 
     from src import routes
     app.register_blueprint(routes.bp)
+
+    socketio.init_app(app, cors_allowed_origins="*", async_mode='eventlet')
 
     return app

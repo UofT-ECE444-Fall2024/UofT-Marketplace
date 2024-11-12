@@ -41,27 +41,9 @@ class User(db.Model):
             'is_admin': self.is_admin,
             'rating': self.rating,
             'rating_count': self.rating_count,
-            'joined_on': self.joined_on
+            'joined_on': self.joined_on.isoformat() if self.joined_on else None
         }
     
-"""
-1. Items Table: This table stores information about items listed for sale.
-
-CREATE TABLE items (
-    item_id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(user_id),  -- seller
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    category VARCHAR(100),  -- e.g., 'Furniture', 'Electronics'
-    price DECIMAL(10, 2),
-    condition VARCHAR(50),  -- e.g., 'New', 'Like New', 'Used'
-    pickup_location VARCHAR(255),  -- predefined secure locations
-    status VARCHAR(50) DEFAULT 'Available',  -- e.g., 'Available', 'Reserved', 'Sold'
-    urgent BOOLEAN DEFAULT FALSE,  -- whether listing is urgent
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
-);
-"""
 class Item(db.Model):
     __tablename__ = 'items'
     
@@ -92,7 +74,7 @@ class Item(db.Model):
             'condition': self.condition,
             'category': self.category,
             'status': self.status,
-            'created_at': self.created_at,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at,
             'favorite_count': len(self.favorites),
             'seller': self.seller.to_dict(),
@@ -113,7 +95,7 @@ class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Add unique constraint to prevent duplicate favorites
     __table_args__ = (db.UniqueConstraint('user_id', 'item_id'),)
@@ -121,3 +103,67 @@ class Favorite(db.Model):
     # Relationships
     user = db.relationship('User', backref=db.backref('favorites', lazy=True, overlaps="favorited_by"), overlaps="favorited_by")
     item = db.relationship('Item', backref=db.backref('favorites', lazy=True, overlaps="favorited_by"), overlaps="favorited_by")
+
+class Conversation(db.Model):
+    __tablename__ = 'conversations'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_message = db.Column(db.String(500), nullable=True)
+    last_message_timestamp = db.Column(db.DateTime, nullable=True)
+    
+    item = db.relationship('Item', backref='conversations')
+    participants = db.relationship('ConversationParticipant', backref='conversation', cascade='all, delete-orphan')
+    messages = db.relationship('Message', backref='conversation', cascade='all, delete-orphan')
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'item_id': self.item_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'last_message': self.last_message,
+            'last_message_timestamp': self.last_message_timestamp.isoformat() if self.last_message_timestamp else None,
+            'item': self.item.to_dict() if self.item else None,
+            'participants': [p.user_id for p in self.participants]
+        }
+
+class ConversationParticipant(db.Model):
+    __tablename__ = 'conversation_participants'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+
+    __table_args__ = (
+        db.UniqueConstraint('conversation_id', 'user_id', name='unique_conversation_user'),
+    )
+
+    user = db.relationship('User', backref='conversation_participants')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'conversation_id': self.conversation_id,
+            'user': self.user.to_dict()
+        }
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    conversation_id = db.Column(db.Integer, db.ForeignKey('conversations.id', ondelete='CASCADE'), nullable=False)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    sender = db.relationship('User', backref='messages')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'conversation_id': self.conversation_id,
+            'sender': self.sender.to_dict() if self.sender else None,
+            'content': self.content,
+            'created_at': self.created_at.isoformat() if self.created_at else None
+        }
