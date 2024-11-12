@@ -24,6 +24,15 @@ def test_get_listings_with_condition(client, setup_data):
     assert data['status'] == 'success'
     assert all(item['condition'] == 'New' for item in data['listings'])
 
+def test_get_listings_with_availability(client, setup_data):
+    # Test with availability filter (e.g., Available)
+    response = client.get('/api/listings', query_string={'availability': 'Available'})
+    data = response.get_json()
+
+    assert response.status_code == 200
+    assert data['status'] == 'success'
+    assert all(item['status'] == 'Available' for item in data['listings'])
+
 
 def test_get_listings_with_location(client, setup_data):
     # Test with location filter (e.g., Bahen)
