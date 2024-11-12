@@ -55,26 +55,58 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newName, setNewName] = useState('');
 
+  // Add this function to handle name updates
+  const handleNameUpdate = async () => {
+    try {
+      const response = await fetch('/api/profile/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userData.id,
+          full_name: newName,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message);
+      }
+
+      setUserData(prev => ({
+        ...prev,
+        full_name: newName
+      }));
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update name:', error);
+    }
+  };
+  
   useEffect(() => {
     fetchProfile();
   }, []);
 
   const fetchProfile = async () => {
     try {
-      const storedUser = JSON.parse(localStorage.getItem('user'));
-
-      if (!storedUser?.username) {
-        throw new Error('Not logged in');
+      // Get user data from localStorage
+      const storedUserData = localStorage.getItem('userData');
+      
+      if (!storedUserData) {
+        throw new Error('No user data found in localStorage');
       }
 
-      const response = await fetch(`/api/profile/${storedUser.username}`);
-      const data = await response.json();
+      const parsedUserData = JSON.parse(storedUserData);
+      setUserData(parsedUserData);
 
-      if (response.ok) {
-        setUserData(data.user);
-        // Fetch user's items
-        const itemsResponse = await fetch(`/api/listings/user/${data.user.id}`);
+      // Fetch user's items if you have the user ID
+      if (parsedUserData.id) {
+        const itemsResponse = await fetch(`/api/listings/user/${parsedUserData.id}`);
         const itemsData = await itemsResponse.json();
 
         if (itemsResponse.ok) {
@@ -82,8 +114,6 @@ const Profile = () => {
         } else {
           setError(itemsData.message);
         }
-      } else {
-        setError(data.message);
       }
     } catch (err) {
       setError(err.message);
@@ -97,10 +127,12 @@ const Profile = () => {
   if (!userData) return <div>No user data found</div>;
 
   const initials = userData.full_name
-    .split(' ')
-    .map(name => name[0])
-    .join('')
-    .toUpperCase();
+    ? userData.full_name
+        .split(' ')
+        .map(name => name[0])
+        .join('')
+        .toUpperCase()
+    : userData.username?.[0]?.toUpperCase() || '?';
 
   return (
     <Container maxWidth="lg" className="mt-8">
@@ -111,15 +143,48 @@ const Profile = () => {
           <Box className="flex flex-col items-center gap-4 md:w-1/3">
             <Avatar
               className="w-40 h-40 text-5xl bg-blue-600"
-              src="/api/placeholder/160/160"  // Placeholder profile pic
+              src="/api/placeholder/160/160"
             >
               {initials}
             </Avatar>
 
             <Box className="flex flex-col items-center text-center">
-              <Typography variant="h4" className="font-bold">
-                {userData.full_name}
-              </Typography>
+            {isEditing ? (
+    <Box className="flex items-center gap-2">
+      <input
+        type="text"
+        value={newName}
+        onChange={(e) => setNewName(e.target.value)}
+        className="px-2 py-1 border rounded text-2xl font-bold"
+        onKeyPress={(e) => e.key === 'Enter' && handleNameUpdate()}
+      />
+      <button
+        onClick={handleNameUpdate}
+        className="text-green-600 hover:text-green-700"
+      >
+        Save
+      </button>
+      <button
+        onClick={() => setIsEditing(false)}
+        className="text-red-600 hover:text-red-700"
+      >
+        Cancel
+      </button>
+    </Box>
+  ) : (
+    <Typography variant="h4" className="font-bold flex items-center gap-2">
+      {userData.full_name || userData.username}
+      <button
+        onClick={() => {
+          setNewName(userData.full_name || userData.username);
+          setIsEditing(true);
+        }}
+        className="text-gray-500 hover:text-gray-700 text-sm"
+      >
+        Edit
+      </button>
+    </Typography>
+  )}
 
               <Typography variant="subtitle1" color="textSecondary">
                 @{userData.username}
@@ -136,17 +201,17 @@ const Profile = () => {
 
               <Box className="flex items-center gap-1 mt-4">
                 <Rating
-                  value={userData.rating} // Placeholder rating
+                  value={userData.rating || 0}
                   precision={0.5}
                   readOnly
                 />
                 <Typography variant="body2" color="textSecondary">
-                  ({userData.rating}/5)
+                  ({userData.rating || 0}/5)
                 </Typography>
               </Box>
 
               <Typography variant="body2" color="textSecondary" className="mt-1">
-                Based on {userData.rating_count} reviews
+                Based on {userData.rating_count || 0} reviews
               </Typography>
             </Box>
 
@@ -159,20 +224,19 @@ const Profile = () => {
             )}
           </Box>
 
-          {/* Right Column - userItems & Reviews */}
+          {/* Right Column - Listings & Reviews */}
           <Box className="md:w-2/3">
             <Tabs
               value={activeTab}
               onChange={(e, newValue) => setActiveTab(newValue)}
               className="mb-4"
             >
-              <Tab label={`userItems (${userItems.length})`} />
+              <Tab label={`Listings (${userItems.length})`} />
               <Tab label={`Reviews (${MOCK_REVIEWS.length})`} />
             </Tabs>
 
             <TabPanel value={activeTab} index={0}>
               <Grid container spacing={3}>
-                {/* Check if there are userItems to display */}
                 {userItems.length > 0 ? (
                   userItems.map((listing, index) => (
                     <Grid item key={index} xs={12} sm={6} md={6} lg={4}>
@@ -184,19 +248,18 @@ const Profile = () => {
                         id={listing.id}
                         sx={{
                           maxWidth: 300,
-                          height: 60, // Adjust the height to make the card shorter
-                          overflow: 'hidden', // Ensures content doesn't overflow
+                          height: 60,
+                          overflow: 'hidden',
                         }}
                       />
                     </Grid>
                   ))
                 ) : (
                   <Box sx={{ width: '100%', textAlign: 'center', marginTop: 5 }}>
-                    <Typography>No userItems available currently!</Typography>
+                    <Typography>No listings available currently!</Typography>
                   </Box>
                 )}
               </Grid>
-
             </TabPanel>
 
             <TabPanel value={activeTab} index={1}>

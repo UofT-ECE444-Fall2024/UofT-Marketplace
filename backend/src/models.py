@@ -10,7 +10,7 @@ class User(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(256), nullable=False)
+    password_hash = db.Column(db.String(256), nullable=True)
     full_name = db.Column(db.String(120))
     email = db.Column(db.String(120), unique=True)
     verified = db.Column(db.Boolean, default=False)
@@ -22,11 +22,14 @@ class User(db.Model):
     rating = db.Column(db.Float, nullable=False, default=0.0)
     rating_count = db.Column(db.Integer, nullable=False, default=0)
 
+    auth_type = db.Column(db.String(20), default='local')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
+        if not self.password_hash:  # Handle OAuth users who don't have a password
+            return False
         return check_password_hash(self.password_hash, password)
 
     def to_dict(self):
@@ -41,7 +44,7 @@ class User(db.Model):
             'is_admin': self.is_admin,
             'rating': self.rating,
             'rating_count': self.rating_count,
-            'joined_on': self.joined_on
+            'joined_on': self.joined_on.isoformat() if self.joined_on else None
         }
     
 class Item(db.Model):
@@ -74,7 +77,7 @@ class Item(db.Model):
             'condition': self.condition,
             'category': self.category,
             'status': self.status,
-            'created_at': self.created_at,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at,
             'favorite_count': len(self.favorites),
             'seller': self.seller.to_dict(),
@@ -95,7 +98,7 @@ class Favorite(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Add unique constraint to prevent duplicate favorites
     __table_args__ = (db.UniqueConstraint('user_id', 'item_id'),)
@@ -121,9 +124,9 @@ class Conversation(db.Model):
         return {
             'id': self.id,
             'item_id': self.item_id,
-            'created_at': self.created_at,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
             'last_message': self.last_message,
-            'last_message_timestamp': self.last_message_timestamp,
+            'last_message_timestamp': self.last_message_timestamp.isoformat() if self.last_message_timestamp else None,
             'item': self.item.to_dict() if self.item else None,
             'participants': [p.user_id for p in self.participants]
         }
@@ -165,5 +168,5 @@ class Message(db.Model):
             'conversation_id': self.conversation_id,
             'sender': self.sender.to_dict() if self.sender else None,
             'content': self.content,
-            'created_at': self.created_at.isoformat()
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
