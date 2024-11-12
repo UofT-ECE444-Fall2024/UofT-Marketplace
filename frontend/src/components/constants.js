@@ -9,6 +9,11 @@ export const LOCATIONS = [
     'Robarts'
 ];
 
+export const AVAILABILITY_OPTIONS = [
+  'Available',
+  'Unavailable'
+];
+
 export const CONDITIONS = [
     'New',
     'Used - Like New',
