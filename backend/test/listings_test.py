@@ -184,3 +184,37 @@ def test_delete_listing(client, setup_listing_data):
     assert data['status'] == 'success'
     assert data['message'] == 'Listing deleted successfully'
 
+# Test PUT /api/listings/availibility/<int:id>
+def test_update_availibility(client, setup_listing_data):
+    item_id = setup_listing_data  # This gets the item_id from the fixture
+    
+    # Prepare the data for updating availability
+    updated_data = {
+        'status': 'unavailable'
+    }
+
+    # Send PUT request to update availability
+    response = client.put(f'/api/listings/availibility/{item_id}', json=updated_data)
+    data = response.get_json()
+
+    # Assertions
+    assert response.status_code == 200
+    assert data['status'] == 'success'
+    assert data['message'] == 'Listing availibility updated successfully'
+    assert data['item']['status'] == 'unavailable'
+
+
+def test_update_availibility_item_not_found(client):
+    # Define a payload for updating an item that doesn't exist
+    updated_data = {'status': 'unavailable'}
+
+    # Send PUT request to an invalid item ID
+    response = client.put('/api/listings/availibility/9999', json=updated_data)
+
+    # Check the response for item not found (404)
+    assert response.status_code == 404  # In your case, this will return 500 error if an exception occurs
+    data = response.get_json()
+    assert data['status'] == 'error'
+    assert data['message'] == 'Listing not found' # Assuming 'not found' is part of the error message
+
+

@@ -368,6 +368,12 @@ def update_availibility(id):
         # Retrieve the existing item by ID
         item = db.session.get(Item, id)
 
+        if not item:
+            return jsonify({
+                'status': 'error',
+                'message': 'Listing not found'
+            }), 404
+
         # Update item fields
         item.status = data.get('status', item.status)
 
