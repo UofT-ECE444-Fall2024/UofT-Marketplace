@@ -28,12 +28,17 @@ const NavItem = ({ to, icon, onClick }) => {
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
-  const stytch = useStytch();
+  const stytchClient = useStytch();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await stytch.session.revoke();
-    navigate('/');
+    try {
+      await stytchClient.session.revoke();
+      navigate('/', { replace: true });
+    } catch (error) {
+      console.error('Logout failed:', error);
+      // Optionally handle error (e.g., show error message to user)
+    }
   };
 
   const toggleMenu = () => setIsOpen(!isOpen);
