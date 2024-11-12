@@ -12,3 +12,6 @@ Flask-SQLAlchemy
 Flask-Cors
 boto3
 gunicorn
+pytest
+pytest-xdist
+pytest-benchmark
