@@ -22,11 +22,11 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-    app.config['MAIL_PORT'] = 587
-    app.config['MAIL_USE_TLS'] = True,
-    app.config['MAIL_USE_SSL'] = False,
+    app.config['MAIL_PORT'] = 465  # For SSL; use 587 for TLS
+    app.config['MAIL_USE_TLS'] = False  # True for TLS on port 587
+    app.config['MAIL_USE_SSL'] = True   # True for SSL on port 465
     app.config['MAIL_USERNAME'] = 'bobaverify@gmail.com'  # Replace with your email
-    app.config['MAIL_PASSWORD'] = 'ehhj zlic lvcy rlre'     # Replace with your app password
+    app.config['MAIL_PASSWORD'] = 'ahac awcq meyo vczn'     # Replace with your app password
     app.config['OTP_EXPIRY_MINUTES'] = 10
     
     # Create tables and admin user

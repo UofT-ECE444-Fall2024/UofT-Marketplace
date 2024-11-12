@@ -94,11 +94,6 @@ const Auth = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!isVerified) {
-      setError('Please verify your email with OTP first');
-      return;
-    }
 
     setIsLoading(true);
     try {
@@ -230,7 +225,6 @@ const Auth = () => {
         <button
           type="submit"
           className="w-full py-2 px-4 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
-          disabled={!isVerified || isLoading}
         >
           {isLoading ? 'Creating Account...' : 'Create Account'}
         </button>

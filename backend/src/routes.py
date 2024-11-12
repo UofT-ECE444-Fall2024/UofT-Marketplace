@@ -30,11 +30,11 @@ def send_otp_email(email, otp):
     """Send OTP via email"""
     try:
         msg = Message(
-            'Email Verification OTP',
-            sender=current_app.config['MAIL_USERNAME'],
-            recipients=[email]
+            subject = 'Boba Email Verification OTP',
+            sender="bobaverify@gmail.com",
+            recipients=[email],
+            body = f'Your OTP for email verification is: {otp}\nThis OTP will expire in 10 minutes.'
         )
-        msg.body = f'Your OTP for email verification is: {otp}\nThis OTP will expire in {current_app.config["OTP_EXPIRY_MINUTES"]} minutes.'
         mail.send(msg)
         return True
     except Exception as e:
@@ -55,7 +55,7 @@ def send_verification_otp():
 
     # Generate OTP and store it
     otp = generate_otp()
-    expiry_time = datetime.now() + timedelta(minutes=current_app.config['OTP_EXPIRY_MINUTES'])
+    expiry_time = datetime.now() + timedelta(minutes=10)
     otp_store[email] = {
         'otp': otp,
         'expiry_time': expiry_time
