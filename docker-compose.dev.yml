@@ -24,3 +24,5 @@ services:
       - NODE_ENV=development
     ports:
       - '3000:3000'
+    mem_limit: 2g
+    memswap_limit: 3g
